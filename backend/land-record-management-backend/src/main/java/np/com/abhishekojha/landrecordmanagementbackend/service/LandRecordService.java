@@ -26,6 +26,7 @@ public class LandRecordService {
     private final OwnershipHistoryRepository ownershipHistoryRepository;
     private final UserRepository userRepository;
     private final LandRecordIntegrityService integrityService;
+    private final AuditService auditService;
 
     @Transactional
     public LandRecordResponse createLandRecord(LandRecordRequest request) {
@@ -70,6 +71,9 @@ public class LandRecordService {
         ownershipHistoryRepository.save(history);
 
         integrityService.rebuildMerkleTree();
+
+        auditService.log(owner, "CREATE_RECORD", "LandRecord", record.getId(),
+                "Created land record " + record.getKittaNumber());
 
         return toResponse(record);
     }

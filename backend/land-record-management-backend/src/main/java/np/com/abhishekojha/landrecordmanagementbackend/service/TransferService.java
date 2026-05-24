@@ -23,6 +23,7 @@ public class TransferService {
     private final UserRepository userRepository;
     private final OwnershipHistoryRepository ownershipHistoryRepository;
     private final LandRecordIntegrityService integrityService;
+    private final AuditService auditService;
 
     @Transactional
     public TransferResponse initiateTransfer(TransferRequest request, User seller) {
@@ -56,6 +57,10 @@ public class TransferService {
                 .build();
 
         transfer = transferRepository.save(transfer);
+
+        auditService.log(seller, "INITIATE_TRANSFER", "Transfer", transfer.getId(),
+                "Transfer initiated for " + record.getKittaNumber() + " to " + buyer.getFullName());
+
         return toResponse(transfer);
     }
 
@@ -72,6 +77,10 @@ public class TransferService {
         transfer.setVerifiedByOfficer(officer);
 
         transfer = transferRepository.save(transfer);
+
+        auditService.log(officer, "VERIFY_TRANSFER", "Transfer", transfer.getId(),
+                "Transfer verified for " + transfer.getLandRecord().getKittaNumber());
+
         return toResponse(transfer);
     }
 
@@ -118,6 +127,10 @@ public class TransferService {
 
         integrityService.rebuildMerkleTree();
 
+        auditService.log(admin, "APPROVE_TRANSFER", "Transfer", transfer.getId(),
+                "Transfer approved for " + transfer.getLandRecord().getKittaNumber()
+                        + ", ownership changed to " + newOwner.getFullName());
+
         return toResponse(transfer);
     }
 
@@ -136,6 +149,10 @@ public class TransferService {
         transfer.setAdminApprovedAt(LocalDateTime.now());
 
         transfer = transferRepository.save(transfer);
+
+        auditService.log(admin, "REJECT_TRANSFER", "Transfer", transfer.getId(),
+                "Transfer rejected: " + reason);
+
         return toResponse(transfer);
     }
 
