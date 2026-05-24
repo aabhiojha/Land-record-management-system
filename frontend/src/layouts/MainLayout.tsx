@@ -81,5 +81,7 @@ function getNavLinks(role: string | null) {
     links.push({ to: '/users', label: 'User Management' });
   }
 
+  links.push({ to: '/verification', label: 'Verification' });
+
   return links;
 }

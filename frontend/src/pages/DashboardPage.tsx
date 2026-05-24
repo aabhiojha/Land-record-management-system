@@ -1,35 +1,80 @@
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { dashboardApi } from '@/api/dashboardApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const roleLabels: Record<string, string> = {
-  SUPER_ADMIN: 'Super Admin',
-  MALPOT_OFFICER: 'Malpot Officer',
-  CITIZEN: 'Citizen',
-};
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export function DashboardPage() {
-  const { fullName, role, email } = useAuthStore();
+  const { fullName, role } = useAuthStore();
+  const [stats, setStats] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        let res;
+        if (role === 'SUPER_ADMIN') res = await dashboardApi.getAdmin();
+        else if (role === 'MALPOT_OFFICER') res = await dashboardApi.getOfficer();
+        else res = await dashboardApi.getCitizen();
+        setStats(res.data as Record<string, number>);
+      } catch {
+        /* empty */
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [role]);
+
+  if (loading) return <LoadingSpinner />;
+
+  const statCards = getStatCards(role, stats);
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome, {fullName}!</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-muted-foreground">
-            <span className="font-medium text-foreground">Role:</span>{' '}
-            {role ? roleLabels[role] : ''}
-          </p>
-          <p className="text-muted-foreground">
-            <span className="font-medium text-foreground">Email:</span> {email}
-          </p>
-          <p className="text-sm text-muted-foreground mt-4">
-            Full dashboard with stats will be available after land records and transfers are implemented.
-          </p>
-        </CardContent>
-      </Card>
+      <h1 className="text-3xl font-bold mb-2">Welcome, {fullName}!</h1>
+      <p className="text-muted-foreground mb-6">
+        {role === 'SUPER_ADMIN' && 'System Administration Dashboard'}
+        {role === 'MALPOT_OFFICER' && 'Land Revenue Officer Dashboard'}
+        {role === 'CITIZEN' && 'Citizen Dashboard'}
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card) => (
+          <Card key={card.label}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {card.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{card.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
+}
+
+function getStatCards(role: string | null, stats: Record<string, number>) {
+  if (role === 'SUPER_ADMIN') {
+    return [
+      { label: 'Total Records', value: stats.totalRecords ?? 0 },
+      { label: 'Pending Approvals', value: stats.pendingApprovals ?? 0 },
+      { label: 'Total Users', value: stats.totalUsers ?? 0 },
+      { label: 'Total Transfers', value: stats.totalTransfers ?? 0 },
+    ];
+  }
+  if (role === 'MALPOT_OFFICER') {
+    return [
+      { label: 'Total Records', value: stats.totalRecords ?? 0 },
+      { label: 'Pending Verifications', value: stats.pendingVerifications ?? 0 },
+      { label: 'Total Transfers', value: stats.totalTransfers ?? 0 },
+    ];
+  }
+  return [
+    { label: 'My Records', value: stats.myRecords ?? 0 },
+    { label: 'My Transfers', value: stats.myTransfers ?? 0 },
+  ];
 }
