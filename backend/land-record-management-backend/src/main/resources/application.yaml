@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: land-record-management-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/land-registry-db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:land-record-management-system-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256}
+    expiration-ms: 86400000
+  upload:
+    dir: ./uploads
