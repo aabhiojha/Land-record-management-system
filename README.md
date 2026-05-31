@@ -93,3 +93,7 @@ mvn test
 6. Login as admin (`admin@landrecord.gov.np` / `admin123`) → approve the transfer
 7. Go to Verification page → verify the record's integrity (Merkle proof visualization)
 8. Verify the full hash chain
+
+## Design Prompt
+
+Use the [frontend generation prompt](docs/frontend-generation-prompt.md) to generate a polished Nepal government frontend for this system.
