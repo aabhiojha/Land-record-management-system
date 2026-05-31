@@ -8,6 +8,8 @@ backend/**/*.war
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
+frontend-nepal-gov/node_modules/
+frontend-nepal-gov/dist/
 
 # === IDE ===
 .idea/
@@ -29,4 +31,3 @@ uploads/
 
 PROJECT_PHASES.md
 REQUIREMENTS.md
-
