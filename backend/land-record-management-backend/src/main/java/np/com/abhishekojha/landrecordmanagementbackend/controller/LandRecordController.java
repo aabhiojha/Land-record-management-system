@@ -54,4 +54,5 @@ public class LandRecordController {
     public ResponseEntity<List<LandRecordResponse>> getMyRecords(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(landRecordService.getRecordsByOwner(user.getId()));
     }
+
 }

@@ -1,5 +1,6 @@
 import api from './axiosConfig';
 import type { LandRecord, LandRecordRequest, OwnershipHistory } from '@/types/landRecord';
+import type { User } from '@/types/user';
 
 export const landRecordApi = {
   getAll: (search?: string) =>
@@ -16,4 +17,7 @@ export const landRecordApi = {
 
   create: (data: LandRecordRequest) =>
     api.post<LandRecord>('/officer/land-records', data),
+
+  getCitizens: () =>
+    api.get<User[]>('/users/citizens'),
 };

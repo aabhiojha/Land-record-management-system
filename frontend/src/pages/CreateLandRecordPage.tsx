@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { landRecordApi } from '@/api/landRecordApi';
-import { userApi } from '@/api/userApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,8 +24,8 @@ export function CreateLandRecordPage() {
   });
 
   useEffect(() => {
-    userApi.getAll().then((res) => {
-      setCitizens(res.data.filter((u) => u.role === 'CITIZEN'));
+    landRecordApi.getCitizens().then((res) => {
+      setCitizens(res.data);
     }).catch(() => {});
   }, []);
 
