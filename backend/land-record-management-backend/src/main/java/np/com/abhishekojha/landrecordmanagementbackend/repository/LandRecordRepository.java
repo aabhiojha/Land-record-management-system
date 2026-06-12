@@ -18,5 +18,9 @@ public interface LandRecordRepository extends JpaRepository<LandRecord, Long> {
 
     List<LandRecord> findByIsActiveTrue();
 
+    List<LandRecord> findByIsActiveTrueOrderByIdAsc();
+
+    long countByIsActiveTrue();
+
     List<LandRecord> findByKittaNumberContainingIgnoreCaseOrDistrictContainingIgnoreCase(String kitta, String district);
 }

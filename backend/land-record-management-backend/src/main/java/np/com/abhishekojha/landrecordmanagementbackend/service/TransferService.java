@@ -102,12 +102,15 @@ public class TransferService {
                     ownershipHistoryRepository.save(h);
                 });
 
-        // Update record owner and recompute hash
-        record.setPreviousRecordHash(record.getRecordHash());
+        // Update record owner, then re-link the chain. The pre-transfer hash
+        // is preserved on transfer.oldRecordHash and in ownership history;
+        // previousRecordHash must keep pointing at the preceding record in
+        // the chain or chain verification breaks after a legitimate change.
         record.setCurrentOwner(newOwner);
         record = landRecordRepository.save(record);
-        record.setRecordHash(integrityService.computeHash(record));
-        record = landRecordRepository.save(record);
+        integrityService.rechainActiveRecords();
+        record = landRecordRepository.findById(record.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Land record not found"));
 
         // New ownership entry
         OwnershipHistory newHistory = OwnershipHistory.builder()

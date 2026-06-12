@@ -18,7 +18,7 @@ public class DashboardService {
 
     public Map<String, Object> getAdminDashboard() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalRecords", landRecordRepository.findByIsActiveTrue().size());
+        stats.put("totalRecords", landRecordRepository.countByIsActiveTrue());
         stats.put("pendingApprovals", transferRepository.findByStatus(TransferStatus.OFFICER_VERIFIED).size());
         stats.put("totalUsers", userRepository.count());
         stats.put("totalTransfers", transferRepository.count());
@@ -27,7 +27,7 @@ public class DashboardService {
 
     public Map<String, Object> getOfficerDashboard() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalRecords", landRecordRepository.findByIsActiveTrue().size());
+        stats.put("totalRecords", landRecordRepository.countByIsActiveTrue());
         stats.put("pendingVerifications", transferRepository.findByStatus(TransferStatus.INITIATED).size());
         stats.put("totalTransfers", transferRepository.count());
         return stats;

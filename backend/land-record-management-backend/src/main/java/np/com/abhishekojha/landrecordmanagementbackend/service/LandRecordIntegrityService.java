@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +37,34 @@ public class LandRecordIntegrityService {
         return MerkleTreeEngine.computeRecordHash(input);
     }
 
+    /**
+     * Re-links and re-hashes the active record chain after a legitimate
+     * mutation (e.g. an approved ownership transfer). A changed record
+     * invalidates its own hash and the previousRecordHash link of every
+     * record after it, so the chain must be recomputed from the first
+     * affected record onward.
+     */
+    @Transactional
+    public void rechainActiveRecords() {
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
+        String previousHash = null;
+
+        for (LandRecord record : records) {
+            if (!Objects.equals(previousHash, record.getPreviousRecordHash())) {
+                record.setPreviousRecordHash(previousHash);
+            }
+            String computed = computeHash(record);
+            if (!computed.equals(record.getRecordHash())) {
+                record.setRecordHash(computed);
+                landRecordRepository.save(record);
+            }
+            previousHash = record.getRecordHash();
+        }
+    }
+
     @Transactional
     public void rebuildMerkleTree() {
-        List<LandRecord> records = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         if (records.isEmpty()) return;
 
         List<String> leafHashes = records.stream()
@@ -84,7 +110,7 @@ public class LandRecordIntegrityService {
     }
 
     public String getCurrentMerkleRoot() {
-        List<LandRecord> records = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         if (records.isEmpty()) return null;
 
         List<String> leafHashes = records.stream()
@@ -101,7 +127,7 @@ public class LandRecordIntegrityService {
     }
 
     public List<ProofStep> generateProof(LandRecord record) {
-        List<LandRecord> records = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         List<String> leafHashes = records.stream()
                 .map(LandRecord::getRecordHash)
                 .toList();
@@ -120,7 +146,7 @@ public class LandRecordIntegrityService {
     }
 
     public boolean verifyProof(LandRecord record) {
-        List<LandRecord> records = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         List<String> leafHashes = records.stream()
                 .map(LandRecord::getRecordHash)
                 .toList();
@@ -132,7 +158,7 @@ public class LandRecordIntegrityService {
     }
 
     public List<LandRecordHashInput> buildChainInputs() {
-        List<LandRecord> records = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         List<LandRecordHashInput> inputs = new ArrayList<>();
 
         for (LandRecord record : records) {

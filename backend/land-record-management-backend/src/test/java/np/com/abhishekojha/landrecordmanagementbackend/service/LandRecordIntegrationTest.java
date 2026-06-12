@@ -106,6 +106,29 @@ class LandRecordIntegrationTest {
     }
 
     @Test
+    void transferMiddleRecord_keepsChainAndHashesValid() {
+        createRecord("KTM-1001", citizen1.getId());
+        LandRecordResponse middle = createRecord("KTM-1002", citizen1.getId());
+        createRecord("KTM-1003", citizen2.getId());
+
+        TransferRequest transferReq = new TransferRequest();
+        transferReq.setLandRecordId(middle.getId());
+        transferReq.setBuyerId(citizen2.getId());
+        TransferResponse transfer = transferService.initiateTransfer(transferReq, citizen1);
+        transfer = transferService.verifyTransfer(transfer.getId(), officer);
+        transferService.approveTransfer(transfer.getId(), admin);
+
+        List<LandRecordHashInput> chain = integrityService.buildChainInputs();
+        assertEquals(-1, HashChainVerifier.findBrokenLink(chain));
+        assertTrue(HashChainVerifier.verifyChain(chain));
+
+        for (LandRecord record : landRecordRepository.findByIsActiveTrueOrderByIdAsc()) {
+            assertTrue(integrityService.verifyRecordHash(record),
+                    "Stored hash should match recomputed hash for " + record.getKittaNumber());
+        }
+    }
+
+    @Test
     void rejectTransfer_doesNotChangeOwner() {
         LandRecordResponse record = createRecord("KTM-1001", citizen1.getId());
 

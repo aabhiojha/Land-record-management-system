@@ -44,7 +44,7 @@ public class LandRecordService {
             throw new BadRequestException("Invalid land type: " + request.getLandType());
         }
 
-        List<LandRecord> existing = landRecordRepository.findByIsActiveTrue();
+        List<LandRecord> existing = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         String previousHash = existing.isEmpty() ? null : existing.getLast().getRecordHash();
 
         LandRecord record = LandRecord.builder()
@@ -79,7 +79,7 @@ public class LandRecordService {
     }
 
     public List<LandRecordResponse> getAllRecords() {
-        return landRecordRepository.findByIsActiveTrue().stream()
+        return landRecordRepository.findByIsActiveTrueOrderByIdAsc().stream()
                 .map(this::toResponse)
                 .toList();
     }
