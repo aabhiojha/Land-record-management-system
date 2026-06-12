@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { userApi } from '@/api/userApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,12 +22,7 @@ export function UserManagementPage() {
     fullName: '', email: '', password: '', phone: '', citizenshipNumber: '', role: 'MALPOT_OFFICER', district: '',
   });
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
-    setLoading(true);
+  const loadUsers = useCallback(async () => {
     try {
       const res = await userApi.getAll();
       setUsers(res.data);
@@ -36,7 +31,13 @@ export function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // state updates happen only after the fetch resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUsers();
+  }, [loadUsers]);
 
   const toggleStatus = async (user: User) => {
     try {

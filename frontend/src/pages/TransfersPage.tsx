@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { transferApi } from '@/api/transferApi';
 import { useAuthStore } from '@/stores/authStore';
@@ -16,12 +16,7 @@ export function TransfersPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadTransfers();
-  }, [role]);
-
-  const loadTransfers = async () => {
-    setLoading(true);
+  const loadTransfers = useCallback(async () => {
     try {
       let res;
       if (role === 'SUPER_ADMIN') res = await transferApi.getPendingApproval();
@@ -33,7 +28,13 @@ export function TransfersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [role]);
+
+  useEffect(() => {
+    // state updates happen only after the fetch resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTransfers();
+  }, [loadTransfers]);
 
   const handleVerify = async (id: number) => {
     setActionLoading(id);

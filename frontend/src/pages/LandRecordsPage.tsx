@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { landRecordApi } from '@/api/landRecordApi';
 import { useAuthStore } from '@/stores/authStore';
@@ -17,12 +17,7 @@ export function LandRecordsPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRecords();
-  }, []);
-
-  const loadRecords = async (query?: string) => {
-    setLoading(true);
+  const loadRecords = useCallback(async (query?: string) => {
     try {
       const res = await landRecordApi.getAll(query);
       setRecords(res.data);
@@ -31,10 +26,17 @@ export function LandRecordsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // state updates happen only after the fetch resolves
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecords();
+  }, [loadRecords]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     loadRecords(search || undefined);
   };
 
