@@ -1,19 +1,22 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+// Civic palette: gold for pending notices, navy for in-process,
+// forest green for approved, crimson for rejected. Text labels always
+// accompany color so state is never conveyed by color alone.
 const statusStyles: Record<string, string> = {
-  INITIATED: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  OFFICER_VERIFIED: 'bg-blue-100 text-blue-800 border-blue-300',
-  ADMIN_APPROVED: 'bg-green-100 text-green-800 border-green-300',
-  REJECTED: 'bg-red-100 text-red-800 border-red-300',
-  CANCELLED: 'bg-gray-100 text-gray-800 border-gray-300',
-  AABAD: 'bg-purple-100 text-purple-800 border-purple-300',
-  KHET: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  PAKHO: 'bg-amber-100 text-amber-800 border-amber-300',
-  VERIFIED: 'bg-green-100 text-green-800 border-green-300',
-  UNVERIFIED: 'bg-gray-100 text-gray-600 border-gray-300',
-  ACTIVE: 'bg-green-100 text-green-800 border-green-300',
-  INACTIVE: 'bg-red-100 text-red-800 border-red-300',
+  INITIATED: 'bg-notice text-gold border-notice-border',
+  OFFICER_VERIFIED: 'bg-civic/10 text-civic border-civic/25',
+  ADMIN_APPROVED: 'bg-success/10 text-success border-success/25',
+  REJECTED: 'bg-destructive/10 text-destructive border-destructive/25',
+  CANCELLED: 'bg-muted text-muted-foreground border-border',
+  AABAD: 'bg-civic/10 text-civic border-civic/25',
+  KHET: 'bg-success/10 text-success border-success/25',
+  PAKHO: 'bg-notice text-gold border-notice-border',
+  VERIFIED: 'bg-success/10 text-success border-success/25',
+  UNVERIFIED: 'bg-muted text-muted-foreground border-border',
+  ACTIVE: 'bg-success/10 text-success border-success/25',
+  INACTIVE: 'bg-destructive/10 text-destructive border-destructive/25',
 };
 
 const labels: Record<string, string> = {
@@ -36,7 +39,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn(statusStyles[status] || 'bg-gray-100 text-gray-800', className)}
+      className={cn(statusStyles[status] || 'bg-muted text-muted-foreground border-border', className)}
     >
       {labels[status] || status}
     </Badge>

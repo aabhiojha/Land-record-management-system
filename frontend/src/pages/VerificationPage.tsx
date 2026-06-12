@@ -106,9 +106,9 @@ export function VerificationPage() {
       </div>
 
       {recordResult && (
-        <Card className={`mt-6 ${recordResult.valid ? 'border-green-500' : 'border-red-500'}`}>
+        <Card className={`mt-6 border-l-[3px] ${recordResult.valid ? 'border-l-success' : 'border-l-destructive'}`}>
           <CardHeader>
-            <CardTitle className={recordResult.valid ? 'text-green-600' : 'text-red-600'}>
+            <CardTitle className={recordResult.valid ? 'text-success' : 'text-destructive'}>
               {recordResult.valid ? '✓ Record Verified' : '✗ Integrity Violation Detected'}
             </CardTitle>
           </CardHeader>
@@ -140,9 +140,9 @@ export function VerificationPage() {
       )}
 
       {chainResult && (
-        <Card className={`mt-6 ${chainResult.valid ? 'border-green-500' : 'border-red-500'}`}>
+        <Card className={`mt-6 border-l-[3px] ${chainResult.valid ? 'border-l-success' : 'border-l-destructive'}`}>
           <CardHeader>
-            <CardTitle className={chainResult.valid ? 'text-green-600' : 'text-red-600'}>
+            <CardTitle className={chainResult.valid ? 'text-success' : 'text-destructive'}>
               {chainResult.valid ? '✓ Hash Chain Intact' : '✗ Chain Broken'}
             </CardTitle>
           </CardHeader>

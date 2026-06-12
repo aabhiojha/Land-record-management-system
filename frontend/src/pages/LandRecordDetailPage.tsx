@@ -72,10 +72,10 @@ export function LandRecordDetailPage() {
       </div>
 
       {verification && (
-        <Card className={verification.valid ? 'border-green-500' : 'border-red-500'}>
+        <Card className={verification.valid ? 'border-l-[3px] border-l-success' : 'border-l-[3px] border-l-destructive'}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`text-lg font-bold ${verification.valid ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-lg font-bold ${verification.valid ? 'text-success' : 'text-destructive'}`}>
                 {verification.valid ? '✓ VERIFIED' : '✗ INTEGRITY VIOLATION'}
               </span>
             </div>
@@ -142,7 +142,7 @@ export function LandRecordDetailPage() {
               {history.map((h, i) => (
                 <div key={h.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${!h.ownedUntil ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                    <div className={`w-3 h-3 rounded-full ${!h.ownedUntil ? 'bg-success' : 'bg-muted-foreground'}`} />
                     {i < history.length - 1 && <div className="w-0.5 flex-1 bg-border" />}
                   </div>
                   <div className="pb-4">

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/authApi';
+import { FormAlert } from '@/components/common/FormAlert';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,20 +48,18 @@ export function LoginPage() {
   };
 
   return (
-    <Card>
+    <Card className="border-0 shadow-none">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Land Record System</CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+        <CardTitle className="text-2xl">Sign In</CardTitle>
+        <CardDescription>Access the land records registry</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          {error && <FormAlert message={error} />}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="email"
               type="email"
@@ -71,7 +70,9 @@ export function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">
+              Password <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="password"
               type="password"

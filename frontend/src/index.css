@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/source-sans-3";
+@import "@fontsource/libre-baskerville/400.css";
+@import "@fontsource/libre-baskerville/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -16,11 +18,28 @@
   html {
     @apply font-sans;
   }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading;
+  }
+
+  /* Calm, stable, functional: no motion for those who opt out. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-heading: "Libre Baskerville", Georgia, serif;
+  --font-sans: "Source Sans 3 Variable", system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,86 +65,93 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-civic: var(--civic);
+  --color-civic-foreground: var(--civic-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-notice: var(--notice);
+  --color-notice-border: var(--notice-border);
+  --color-success: var(--success);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-4xl: 28px;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-hover: 0 4px 12px rgb(0 0 0 / 0.12);
+  --shadow-modal: 0 8px 32px rgb(0 0 0 / 0.18);
 }
 
+/*
+ * Nepal Sarkar — Civic Digital Design System ("Gairo ra Seto").
+ * Crimson carries authority (primary actions, active nav, official badges).
+ * Navy (`civic`) carries information (table headers, secondary nav, links).
+ * Gold (`gold`) is ceremonial — featured highlights and pinned notices only.
+ * Note: shadcn's `accent` token keeps its library semantic (hover tint);
+ * the design system's gold accent lives in the dedicated `gold` token.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f9f7f4;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #b91c1c;
+  --primary-foreground: #ffffff;
+  --primary-strong: #991b1b;
+  --secondary: #78350f;
+  --secondary-foreground: #fffbeb;
+  --muted: #f5f0eb;
+  --muted-foreground: #78716c;
+  --accent: #f5f0eb;
+  --accent-foreground: #1c1917;
+  --civic: #1e3a5f;
+  --civic-foreground: #dbeafe;
+  --gold: #92400e;
+  --gold-foreground: #fffbeb;
+  --notice: #fffbeb;
+  --notice-border: #fde68a;
+  --success: #166534;
+  --destructive: #dc2626;
+  --border: #e7e5e4;
+  --input: #d6d3d1;
+  --ring: #b91c1c;
+  --chart-1: #b91c1c;
+  --chart-2: #1e3a5f;
+  --chart-3: #92400e;
+  --chart-4: #166534;
+  --chart-5: #78350f;
+  --radius: 8px;
+  --sidebar: #1e3a5f;
+  --sidebar-foreground: #f9f7f4;
+  --sidebar-primary: #b91c1c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a4a73;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a4a73;
+  --sidebar-ring: #b91c1c;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+@layer components {
+  /*
+   * The Dhaka Stripe: crimson diamond weave on temple maroon. The primary
+   * cultural signal — used at the very top of the page and as a section
+   * divider. Never taller than 8px; one stripe does the work.
+   */
+  .dhaka-stripe {
+    height: 6px;
+    background-color: #78350f;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6'%3E%3Cpath d='M6 0l5 3-5 3-5-3z' fill='%23b91c1c'/%3E%3Ccircle cx='0.5' cy='3' r='0.75' fill='%23fbbf24' opacity='0.6'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+  }
 }

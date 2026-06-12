@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/authApi';
+import { FormAlert } from '@/components/common/FormAlert';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,20 +62,21 @@ export function RegisterPage() {
   };
 
   return (
-    <Card>
+    <Card className="border-0 shadow-none">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Create Account</CardTitle>
         <CardDescription>Register as a citizen</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          {error && <FormAlert message={error} />}
+          <p className="text-xs text-muted-foreground">
+            Fields marked <span className="text-primary">*</span> are required.
+          </p>
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">
+              Full Name <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="fullName"
               placeholder="Ram Bahadur Thapa"
@@ -84,7 +86,9 @@ export function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="email"
               type="email"
@@ -95,7 +99,9 @@ export function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">
+              Password <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="password"
               type="password"
@@ -116,7 +122,9 @@ export function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="citizenshipNumber">Citizenship Number</Label>
+            <Label htmlFor="citizenshipNumber">
+              Citizenship Number <span className="text-primary" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="citizenshipNumber"
               placeholder="12-34-56789"
