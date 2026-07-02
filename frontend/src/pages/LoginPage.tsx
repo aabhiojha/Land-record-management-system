@@ -33,6 +33,7 @@ export function LoginPage() {
       const res = await authApi.login({ email, password });
       setAuth({
         token: res.data.token,
+        refreshToken: res.data.refreshToken,
         userId: res.data.userId,
         fullName: res.data.fullName,
         email: res.data.email,

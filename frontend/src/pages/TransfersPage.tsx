@@ -8,21 +8,39 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PaginationControls } from '@/components/common/PaginationControls';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { landRecordApi } from '@/api/landRecordApi';
 import type { Transfer } from '@/types/transfer';
+import type { LandRecord } from '@/types/landRecord';
 
 export function TransfersPage() {
   const role = useAuthStore((s) => s.role);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [selectedLandRecord, setSelectedLandRecord] = useState<LandRecord | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const loadTransfers = useCallback(async () => {
+  const loadTransfers = useCallback(async (pageNumber: number = 0) => {
     try {
-      let res;
-      if (role === 'SUPER_ADMIN') res = await transferApi.getPendingApproval();
-      else if (role === 'MALPOT_OFFICER') res = await transferApi.getPendingVerification();
-      else res = await transferApi.getMyTransfers();
-      setTransfers(res.data);
+      setLoading(true);
+      if (role === 'SUPER_ADMIN') {
+        const res = await transferApi.getAllTransfers(pageNumber);
+        setTransfers(res.data.content);
+        setTotalPages(res.data.totalPages);
+      } else if (role === 'MALPOT_OFFICER') {
+        const res = await transferApi.getPendingVerification();
+        setTransfers(res.data);
+        setTotalPages(1); // Not paginated
+      } else {
+        const res = await transferApi.getMyTransfers(pageNumber);
+        setTransfers(res.data.content);
+        setTotalPages(res.data.totalPages);
+      }
     } catch {
       /* empty */
     } finally {
@@ -31,10 +49,9 @@ export function TransfersPage() {
   }, [role]);
 
   useEffect(() => {
-    // state updates happen only after the fetch resolves
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadTransfers();
-  }, [loadTransfers]);
+    loadTransfers(page);
+  }, [loadTransfers, page]);
 
   const handleVerify = async (id: number) => {
     setActionLoading(id);
@@ -74,6 +91,19 @@ export function TransfersPage() {
     }
   };
 
+  const handleViewLandRecord = async (landRecordId: number) => {
+    setDialogOpen(true);
+    setDetailsLoading(true);
+    try {
+      const res = await landRecordApi.getById(landRecordId);
+      setSelectedLandRecord(res.data);
+    } catch {
+      /* empty */
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
   const title = role === 'SUPER_ADMIN' ? 'Pending Approvals'
     : role === 'MALPOT_OFFICER' ? 'Pending Verifications'
     : 'My Transfers';
@@ -109,7 +139,14 @@ export function TransfersPage() {
             <TableBody>
               {transfers.map((t) => (
                 <TableRow key={t.id}>
-                  <TableCell className="font-medium">{t.kittaNumber}</TableCell>
+                  <TableCell className="font-medium">
+                    <button 
+                      className="text-primary hover:underline font-medium text-left"
+                      onClick={() => handleViewLandRecord(t.landRecordId)}
+                    >
+                      {t.kittaNumber}
+                    </button>
+                  </TableCell>
                   <TableCell>{t.sellerName}</TableCell>
                   <TableCell>{t.buyerName}</TableCell>
                   <TableCell><StatusBadge status={t.status} /></TableCell>
@@ -144,6 +181,58 @@ export function TransfersPage() {
           </Table>
         </div>
       )}
+
+      {!loading && transfers.length > 0 && role !== 'MALPOT_OFFICER' && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+          loading={loading}
+        />
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Land Record Details</DialogTitle>
+            <DialogDescription>
+              Information for Kitta Number: <span className="font-medium text-foreground">{selectedLandRecord?.kittaNumber}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            {detailsLoading ? (
+              <div className="py-8"><LoadingSpinner /></div>
+            ) : selectedLandRecord ? (
+              <div className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                  <div>
+                    <p className="text-muted-foreground mb-1">District</p>
+                    <p className="font-medium">{selectedLandRecord.district}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">Municipality</p>
+                    <p className="font-medium">{selectedLandRecord.municipality}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">Ward Number</p>
+                    <p className="font-medium">{selectedLandRecord.wardNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">Area (sq. meters)</p>
+                    <p className="font-medium">{selectedLandRecord.areaSqMeters}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1">Land Type</p>
+                    <p className="font-medium">{selectedLandRecord.landType}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">Failed to load details.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

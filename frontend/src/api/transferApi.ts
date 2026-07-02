@@ -1,12 +1,16 @@
 import api from './axiosConfig';
 import type { Transfer, TransferRequest } from '@/types/transfer';
+import type { PageResponse } from './auditApi';
 
 export const transferApi = {
   initiate: (data: TransferRequest) =>
     api.post<Transfer>('/citizen/transfers', data),
 
-  getMyTransfers: () =>
-    api.get<Transfer[]>('/citizen/transfers'),
+  getMyTransfers: (page: number = 0, size: number = 10) =>
+    api.get<PageResponse<Transfer>>('/citizen/transfers', { params: { page, size } }),
+
+  getAllTransfers: (page: number = 0, size: number = 10) =>
+    api.get<PageResponse<Transfer>>('/admin/transfers', { params: { page, size } }),
 
   getPendingVerification: () =>
     api.get<Transfer[]>('/officer/transfers/pending'),

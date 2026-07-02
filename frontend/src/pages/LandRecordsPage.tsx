@@ -9,18 +9,25 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PaginationControls } from '@/components/common/PaginationControls';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { LandRecord } from '@/types/landRecord';
 
 export function LandRecordsPage() {
   const role = useAuthStore((s) => s.role);
   const [records, setRecords] = useState<LandRecord[]>([]);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  const loadRecords = useCallback(async (query?: string) => {
+  const loadRecords = useCallback(async (query?: string, pageNumber: number = 0) => {
     try {
-      const res = await landRecordApi.getAll(query);
-      setRecords(res.data);
+      setLoading(true);
+      const res = await landRecordApi.getAll(query, pageNumber, 10);
+      setRecords(res.data.content);
+      setTotalPages(res.data.totalPages);
     } catch {
       /* empty */
     } finally {
@@ -29,15 +36,17 @@ export function LandRecordsPage() {
   }, []);
 
   useEffect(() => {
-    // state updates happen only after the fetch resolves
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadRecords();
-  }, [loadRecords]);
+    loadRecords(debouncedSearch || undefined, page);
+  }, [loadRecords, debouncedSearch, page]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    loadRecords(search || undefined);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(0);
   };
 
   return (
@@ -58,7 +67,7 @@ export function LandRecordsPage() {
         <Input
           placeholder="Search by kitta number or district..."
           value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="max-w-sm"
         />
         <Button type="submit" variant="outline">Search</Button>
@@ -101,6 +110,15 @@ export function LandRecordsPage() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {!loading && records.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+          loading={loading}
+        />
       )}
     </div>
   );

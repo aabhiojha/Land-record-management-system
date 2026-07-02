@@ -4,7 +4,7 @@ import { Landmark } from 'lucide-react';
 export function AuthLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <div className="dhaka-stripe" aria-hidden="true" />
+
 
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">

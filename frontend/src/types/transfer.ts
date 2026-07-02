@@ -17,9 +17,12 @@ export interface Transfer {
   rejectionReason: string | null;
   oldRecordHash: string | null;
   newRecordHash: string | null;
+  transactionPrice: number;
+  taxAmount: number;
 }
 
 export interface TransferRequest {
   landRecordId: number;
   buyerId: number;
+  transactionPrice: number;
 }

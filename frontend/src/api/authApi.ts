@@ -10,4 +10,10 @@ export const authApi = {
 
   getMe: () =>
     api.get<User>('/auth/me'),
+
+  refresh: (refreshToken: string) =>
+    api.post<AuthResponse>('/auth/refresh', { refreshToken }),
+
+  logout: () =>
+    api.post('/auth/logout'),
 };

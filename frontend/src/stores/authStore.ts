@@ -4,6 +4,7 @@ import type { UserRole } from '@/types/user';
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   userId: number | null;
   fullName: string | null;
   email: string | null;
@@ -12,6 +13,7 @@ interface AuthState {
 
   setAuth: (data: {
     token: string;
+    refreshToken: string;
     userId: number;
     fullName: string;
     email: string;
@@ -24,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refreshToken: null,
       userId: null,
       fullName: null,
       email: null,
@@ -33,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (data) =>
         set({
           token: data.token,
+          refreshToken: data.refreshToken,
           userId: data.userId,
           fullName: data.fullName,
           email: data.email,
@@ -43,6 +47,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () =>
         set({
           token: null,
+          refreshToken: null,
           userId: null,
           fullName: null,
           email: null,

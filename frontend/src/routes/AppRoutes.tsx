@@ -14,6 +14,7 @@ import { TransfersPage } from '@/pages/TransfersPage';
 import { InitiateTransferPage } from '@/pages/InitiateTransferPage';
 import { VerificationPage } from '@/pages/VerificationPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
+import { AuditTrailPage } from '@/pages/AuditTrailPage';
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -69,6 +70,7 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
           <Route element={<MainLayout />}>
             <Route path="/users" element={<UserManagementPage />} />
+            <Route path="/audit" element={<AuditTrailPage />} />
           </Route>
         </Route>
 

@@ -10,9 +10,11 @@ import {
   ScrollText,
   ShieldCheck,
   UsersRound,
+  Activity,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { authApi } from '@/api/authApi';
 
 const roleLabels: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
@@ -25,25 +27,22 @@ export function MainLayout() {
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore errors during logout
+    } finally {
+      logout();
+      navigate('/login');
+    }
   };
 
   const navLinks = getNavLinks(role);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="dhaka-stripe" aria-hidden="true" />
 
-      <div className="flex h-9 items-center justify-between gap-4 bg-primary px-4 text-primary-foreground">
-        <span className="text-xs font-semibold tracking-wide uppercase">
-          Government of Nepal
-        </span>
-        <span className="hidden truncate text-xs sm:block">
-          Ministry of Land Management &middot; Land Records Department
-        </span>
-      </div>
 
       <div className="relative flex flex-1">
         {mobileNavOpen && (
@@ -161,6 +160,7 @@ function getNavLinks(role: string | null) {
   if (role === 'SUPER_ADMIN') {
     links.push({ to: '/transfers', label: 'Transfers', icon: ArrowRightLeft });
     links.push({ to: '/users', label: 'User Management', icon: UsersRound });
+    links.push({ to: '/audit', label: 'Audit Trail', icon: Activity });
   }
 
   links.push({ to: '/verification', label: 'Verification', icon: ShieldCheck });

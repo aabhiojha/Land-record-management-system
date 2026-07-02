@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { landRecordApi } from '@/api/landRecordApi';
 import { verificationApi } from '@/api/verificationApi';
 import { documentApi } from '@/api/documentApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Download } from 'lucide-react';
+import { DOCUMENT_TYPES } from '@/lib/documentTypes';
 import type { LandRecord, OwnershipHistory } from '@/types/landRecord';
 import type { VerificationResult } from '@/types/verification';
-import type { Document } from '@/types/document';
+import type { Document, DocumentType } from '@/types/document';
 
 export function LandRecordDetailPage() {
   const { id } = useParams();
@@ -19,6 +23,17 @@ export function LandRecordDetailPage() {
   const [verification, setVerification] = useState<VerificationResult | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [file, setFile] = useState<File | null>(null);
+  const [docType, setDocType] = useState<DocumentType>('LALPURJA');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const reloadDocs = useCallback(async () => {
+    if (!id) return;
+    const res = await documentApi.getByRecord(Number(id));
+    setDocs(res.data);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +55,37 @@ export function LandRecordDetailPage() {
     };
     load();
   }, [id]);
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      await documentApi.upload(file, Number(id), docType);
+      setFile(null);
+      setDocType('LALPURJA');
+      await reloadDocs();
+    } catch {
+      setUploadError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownload = async (doc: Document) => {
+    try {
+      const res = await documentApi.download(doc.id);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      /* empty */
+    }
+  };
 
   const handleVerify = async () => {
     if (!id) return;
@@ -161,7 +207,32 @@ export function LandRecordDetailPage() {
 
       <Card>
         <CardHeader><CardTitle>Documents ({docs.length})</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleUpload} className="flex flex-col gap-3 rounded-md border border-dashed p-4 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">File</label>
+              <Input
+                type="file"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+            <div className="space-y-1 sm:w-56">
+              <label className="text-xs font-medium text-muted-foreground">Type</label>
+              <Select value={docType} onValueChange={(v: string | null) => v && setDocType(v as DocumentType)}>
+                <SelectTrigger><SelectValue placeholder="Document type" /></SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={!file || uploading}>
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </form>
+          {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
+
           {docs.length === 0 ? (
             <p className="text-sm text-muted-foreground">No documents uploaded</p>
           ) : (
@@ -176,6 +247,9 @@ export function LandRecordDetailPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={doc.isVerified ? 'VERIFIED' : 'UNVERIFIED'} />
+                    <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)} title="Download">
+                      <Download className="size-4" />
+                    </Button>
                   </div>
                 </div>
               ))}

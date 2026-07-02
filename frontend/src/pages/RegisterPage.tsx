@@ -42,6 +42,7 @@ export function RegisterPage() {
       const res = await authApi.register(form);
       setAuth({
         token: res.data.token,
+        refreshToken: res.data.refreshToken,
         userId: res.data.userId,
         fullName: res.data.fullName,
         email: res.data.email,

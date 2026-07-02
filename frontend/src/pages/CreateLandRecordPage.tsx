@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { landRecordApi } from '@/api/landRecordApi';
+import { documentApi } from '@/api/documentApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from '@/components/common/SubmitButton';
+import { DOCUMENT_TYPES } from '@/lib/documentTypes';
+import { X } from 'lucide-react';
 import type { User } from '@/types/user';
+import type { DocumentType } from '@/types/document';
 
 export function CreateLandRecordPage() {
   const navigate = useNavigate();
@@ -22,15 +26,25 @@ export function CreateLandRecordPage() {
     landType: '',
     ownerId: '',
   });
+  const [files, setFiles] = useState<File[]>([]);
+  const [docType, setDocType] = useState<DocumentType>('LALPURJA');
 
   useEffect(() => {
-    landRecordApi.getCitizens().then((res) => {
-      setCitizens(res.data);
+    landRecordApi.getCitizensForOfficer().then((res) => {
+      setCitizens(res.data.content);
     }).catch(() => {});
   }, []);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addFiles = (selected: FileList | null) => {
+    if (selected) setFiles((prev) => [...prev, ...Array.from(selected)]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +61,15 @@ export function CreateLandRecordPage() {
         landType: form.landType,
         ownerId: Number(form.ownerId),
       });
+
+      // Documents need the new record's id, so upload them after it's created.
+      // Failures here don't undo the record — the user can retry from its page.
+      if (files.length > 0) {
+        await Promise.allSettled(
+          files.map((file) => documentApi.upload(file, res.data.id, docType)),
+        );
+      }
+
       navigate(`/land-records/${res.data.id}`);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -125,6 +148,52 @@ export function CreateLandRecordPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2 rounded-md border border-dashed p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="documents">Documents / Images (optional)</Label>
+                  <Input
+                    id="documents"
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      addFiles(e.target.files);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Document Type</Label>
+                  <Select value={docType} onValueChange={(v: string | null) => v && setDocType(v as DocumentType)}>
+                    <SelectTrigger><SelectValue placeholder="Document type" /></SelectTrigger>
+                    <SelectContent>
+                      {DOCUMENT_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {files.length > 0 && (
+                <ul className="space-y-1">
+                  {files.map((file, i) => (
+                    <li key={`${file.name}-${i}`} className="flex items-center justify-between rounded bg-muted/50 px-2 py-1 text-xs">
+                      <span className="truncate">{file.name} · {(file.size / 1024).toFixed(1)} KB</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        className="ml-2 shrink-0 text-muted-foreground hover:text-destructive"
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <SubmitButton loading={loading}>
               {loading ? 'Registering...' : 'Register Land Record'}
             </SubmitButton>

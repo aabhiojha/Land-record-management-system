@@ -10,11 +10,14 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SubmitButton } from '@/components/common/SubmitButton';
+import { PaginationControls } from '@/components/common/PaginationControls';
 import type { User } from '@/types/user';
 
 export function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -22,10 +25,12 @@ export function UserManagementPage() {
     fullName: '', email: '', password: '', phone: '', citizenshipNumber: '', role: 'MALPOT_OFFICER', district: '',
   });
 
-  const loadUsers = useCallback(async () => {
+  const loadUsers = useCallback(async (pageNumber: number = 0) => {
     try {
-      const res = await userApi.getAll();
-      setUsers(res.data);
+      setLoading(true);
+      const res = await userApi.getAll(pageNumber);
+      setUsers(res.data.content);
+      setTotalPages(res.data.totalPages);
     } catch {
       /* empty */
     } finally {
@@ -34,10 +39,9 @@ export function UserManagementPage() {
   }, []);
 
   useEffect(() => {
-    // state updates happen only after the fetch resolves
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadUsers();
-  }, [loadUsers]);
+    loadUsers(page);
+  }, [loadUsers, page]);
 
   const toggleStatus = async (user: User) => {
     try {
@@ -175,6 +179,15 @@ export function UserManagementPage() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {!loading && users.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+          loading={loading}
+        />
       )}
     </div>
   );

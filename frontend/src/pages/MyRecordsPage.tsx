@@ -7,18 +7,25 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
+import { PaginationControls } from '@/components/common/PaginationControls';
 import type { LandRecord } from '@/types/landRecord';
 
 export function MyRecordsPage() {
   const [records, setRecords] = useState<LandRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    landRecordApi.getMyRecords()
-      .then((res) => setRecords(res.data))
+    setLoading(true);
+    landRecordApi.getMyRecords(page, 10)
+      .then((res) => {
+        setRecords(res.data.content);
+        setTotalPages(res.data.totalPages);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   return (
     <div>
@@ -63,6 +70,15 @@ export function MyRecordsPage() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {!loading && records.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+          loading={loading}
+        />
       )}
     </div>
   );
