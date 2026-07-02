@@ -118,6 +118,13 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Object storage (S3-compatible: RustFS / MinIO / AWS S3) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.28.16</version>
+        </dependency>
     </dependencies>
 
     <build>

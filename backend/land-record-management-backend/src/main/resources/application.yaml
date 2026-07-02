@@ -3,7 +3,7 @@ spring:
     name: land-record-management-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/land-registry-db
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/land-registry-db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -41,6 +41,11 @@ springdoc:
 app:
   jwt:
     secret: ${JWT_SECRET:land-record-management-system-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256}
-    expiration-ms: 86400000
-  upload:
-    dir: ./uploads
+    expiration-ms: 900000
+  storage:
+    # S3-compatible object storage (RustFS in Docker; MinIO or AWS S3 also work).
+    endpoint: ${S3_ENDPOINT:http://localhost:9000}
+    bucket: ${S3_BUCKET:land-documents}
+    region: ${S3_REGION:us-east-1}
+    access-key: ${S3_ACCESS_KEY:lrms}
+    secret-key: ${S3_SECRET_KEY:lrms-secret}

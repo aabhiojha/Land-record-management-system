@@ -49,6 +49,7 @@ public class DocumentController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(
                         meta.getContentType() != null ? meta.getContentType() : "application/octet-stream"))
+                .contentLength(meta.getFileSize())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + meta.getFileName() + "\"")
                 .body(resource);
     }

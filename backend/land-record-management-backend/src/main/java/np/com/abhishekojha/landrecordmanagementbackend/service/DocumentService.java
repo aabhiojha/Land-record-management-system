@@ -14,17 +14,18 @@ import np.com.abhishekojha.landrecordmanagementbackend.repository.DocumentReposi
 import np.com.abhishekojha.landrecordmanagementbackend.repository.LandRecordRepository;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,9 +36,10 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final LandRecordRepository landRecordRepository;
     private final TransferRepository transferRepository;
+    private final S3Client s3Client;
 
-    @Value("${app.upload.dir:./uploads}")
-    private String uploadDir;
+    @Value("${app.storage.bucket}")
+    private String bucket;
 
     @Transactional
     public DocumentResponse upload(MultipartFile file, Long landRecordId, Long transferId,
@@ -59,21 +61,25 @@ public class DocumentService {
         }
 
         try {
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath);
+            byte[] bytes = file.getBytes();
 
-            String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = uploadPath.resolve(storedName);
-            file.transferTo(filePath.toFile());
+            // Object key stored on the entity (in filePath) instead of a disk path.
+            String objectKey = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .contentType(file.getContentType())
+                            .build(),
+                    RequestBody.fromBytes(bytes));
 
-            String fileHash = MerkleTreeEngine.sha256(new String(file.getBytes()));
+            String fileHash = MerkleTreeEngine.sha256(bytes);
 
             Document doc = Document.builder()
                     .landRecord(record)
                     .transfer(transfer)
                     .uploadedBy(uploader)
                     .fileName(file.getOriginalFilename())
-                    .filePath(filePath.toString())
+                    .filePath(objectKey)
                     .fileSize(file.getSize())
                     .contentType(file.getContentType())
                     .documentType(docType)
@@ -99,14 +105,13 @@ public class DocumentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
         try {
-            Path path = Paths.get(doc.getFilePath()).normalize();
-            Resource resource = new UrlResource(path.toUri());
-            if (!resource.exists()) {
-                throw new ResourceNotFoundException("File not found on disk");
-            }
-            return resource;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Invalid file path", e);
+            var stream = s3Client.getObject(GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(doc.getFilePath())
+                    .build());
+            return new InputStreamResource(stream);
+        } catch (NoSuchKeyException e) {
+            throw new ResourceNotFoundException("File not found in storage");
         }
     }
 
