@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['malpot.abhishekojha.com.np'],
     proxy: {
       '/api': 'http://localhost:8080',
     },
