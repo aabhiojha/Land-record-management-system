@@ -114,7 +114,7 @@ export function TransfersPage() {
         title={title}
         action={
           role === 'CITIZEN' ? (
-            <Link to="/transfers/new"><Button>+ New Transfer</Button></Link>
+            <Link to="/transfers/new"><Button>New transfer</Button></Link>
           ) : undefined
         }
       />

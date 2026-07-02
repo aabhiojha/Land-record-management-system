@@ -64,49 +64,39 @@ export function RegisterPage() {
 
   return (
     <Card className="border-0 shadow-none">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Create Account</CardTitle>
-        <CardDescription>Register as a citizen</CardDescription>
+      <CardHeader>
+        <CardTitle className="text-lg">Citizen registration</CardTitle>
+        <CardDescription>
+          Your citizenship number is matched against land ownership records.
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <FormAlert message={error} />}
-          <p className="text-xs text-muted-foreground">
-            Fields marked <span className="text-primary">*</span> are required.
-          </p>
           <div className="space-y-2">
-            <Label htmlFor="fullName">
-              Full Name <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="fullName">Full name</Label>
             <Input
               id="fullName"
-              placeholder="Ram Bahadur Thapa"
               value={form.fullName}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('fullName', e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">
-              Email <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
               value={form.email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('email', e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">
-              Password <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="password">Password (min. 6 characters)</Label>
             <Input
               id="password"
               type="password"
-              placeholder="At least 6 characters"
               value={form.password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('password', e.target.value)}
               required
@@ -114,21 +104,17 @@ export function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Phone (optional)</Label>
             <Input
               id="phone"
-              placeholder="9841234567"
               value={form.phone}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('phone', e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="citizenshipNumber">
-              Citizenship Number <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="citizenshipNumber">Citizenship number</Label>
             <Input
               id="citizenshipNumber"
-              placeholder="12-34-56789"
               value={form.citizenshipNumber}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('citizenshipNumber', e.target.value)}
               required
@@ -140,9 +126,9 @@ export function RegisterPage() {
             {loading ? 'Creating account...' : 'Register'}
           </SubmitButton>
           <p className="text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Already registered?{' '}
             <Link to="/login" className="text-primary hover:underline">
-              Sign In
+              Sign in
             </Link>
           </p>
         </CardFooter>

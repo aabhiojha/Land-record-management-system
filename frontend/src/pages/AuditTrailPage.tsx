@@ -5,7 +5,6 @@ import type { AuditLog } from '@/api/auditApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity } from 'lucide-react';
 import { PaginationControls } from '@/components/common/PaginationControls';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -59,14 +58,8 @@ export function AuditTrailPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Activity size={24} />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold">Audit Trail</h1>
-          <p className="text-muted-foreground">Immutable history of system actions</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold">Audit Trail</h1>
       </div>
 
       <Card>
@@ -119,7 +112,7 @@ export function AuditTrailPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={`font-mono text-xs uppercase tracking-wider ${actionClasses(log.action)}`}
+                          className={`text-xs ${actionClasses(log.action)}`}
                         >
                           {log.action.replace(/_/g, ' ')}
                         </Badge>

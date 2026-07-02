@@ -84,7 +84,7 @@ export function CreateLandRecordPage() {
       <Link to="/land-records" className="text-sm text-muted-foreground hover:underline">
         ← Back to records
       </Link>
-      <h1 className="text-3xl font-bold mt-1 mb-6">Register New Land Record</h1>
+      <h1 className="text-xl font-semibold mt-1 mb-6">Register Land Record</h1>
 
       <Card>
         <CardHeader><CardTitle>Land Details</CardTitle></CardHeader>

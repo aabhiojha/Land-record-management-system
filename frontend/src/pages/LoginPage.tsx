@@ -50,34 +50,28 @@ export function LoginPage() {
 
   return (
     <Card className="border-0 shadow-none">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Sign In</CardTitle>
-        <CardDescription>Access the land records registry</CardDescription>
+      <CardHeader>
+        <CardTitle className="text-lg">Sign in</CardTitle>
+        <CardDescription>Use your registered email and password.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <FormAlert message={error} />}
           <div className="space-y-2">
-            <Label htmlFor="email">
-              Email <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
               value={email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">
-              Password <span className="text-primary" aria-hidden="true">*</span>
-            </Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
               value={password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
@@ -86,12 +80,12 @@ export function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <SubmitButton loading={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </SubmitButton>
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            New here?{' '}
             <Link to="/register" className="text-primary hover:underline">
-              Register
+              Register as a citizen
             </Link>
           </p>
         </CardFooter>

@@ -10,10 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { actionClasses, relativeTime } from '@/lib/auditFormat';
-import {
-  FilePlus, ShieldCheck, ShieldAlert, ArrowLeftRight, Users, ScrollText, FileText, Activity,
-  type LucideIcon,
-} from 'lucide-react';
 
 export function DashboardPage() {
   const { fullName, role } = useAuthStore();
@@ -44,48 +40,31 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-2 sm:text-3xl">Welcome, {fullName}</h1>
-      <p className="text-muted-foreground mb-2">
-        {role === 'SUPER_ADMIN' && 'System Administration Dashboard'}
-        {role === 'MALPOT_OFFICER' && 'Land Revenue Officer Dashboard'}
-        {role === 'CITIZEN' && 'Citizen Dashboard'}
-      </p>
-      <div className="mb-8 h-[3px] w-12 bg-primary" aria-hidden="true" />
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">Logged in as {fullName}</p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card, index) => (
-          <Card
-            key={card.label}
-            className={`border-l-[3px] transition-shadow duration-150 hover:shadow-hover ${accentBorders[index % accentBorders.length]}`}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="font-sans text-sm font-medium text-muted-foreground">
-                {card.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-heading text-3xl font-bold">{card.value}</div>
-            </CardContent>
-          </Card>
+        {statCards.map((card) => (
+          <div key={card.label} className="rounded-md border border-border bg-card p-4">
+            <div className="text-sm text-muted-foreground">{card.label}</div>
+            <div className="mt-1 text-2xl font-semibold">{card.value}</div>
+          </div>
         ))}
       </div>
 
       <ChainIntegrityCard />
 
-      <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Quick Actions</h2>
-        <div className="flex flex-wrap gap-3">
-          {actions.map((a) => (
-            <Link
-              key={a.to}
-              to={a.to}
-              className="flex items-center gap-2 rounded-md border bg-card px-4 py-3 text-sm font-medium transition-shadow hover:shadow-hover"
-            >
-              <a.icon className="size-4 text-primary" />
+      <div className="mt-6 text-sm">
+        {actions.map((a, i) => (
+          <span key={a.to}>
+            {i > 0 && <span className="mx-2 text-muted-foreground">·</span>}
+            <Link to={a.to} className="text-primary hover:underline">
               {a.label}
             </Link>
-          ))}
-        </div>
+          </span>
+        ))}
       </div>
 
       {role === 'SUPER_ADMIN' && <RecentActivity />}
@@ -113,46 +92,33 @@ function ChainIntegrityCard() {
   }, []);
 
   const valid = chain?.valid ?? false;
-  const accent = loading || failed
-    ? 'border-l-muted-foreground'
-    : valid ? 'border-l-success' : 'border-l-destructive';
 
   return (
-    <Card className={`mt-8 border-l-[3px] ${accent}`}>
-      <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          {loading ? (
-            <ShieldCheck className="size-6 text-muted-foreground" />
-          ) : valid ? (
-            <ShieldCheck className="size-6 text-success" />
-          ) : (
-            <ShieldAlert className="size-6 text-destructive" />
+    <div className="mt-4 flex flex-col gap-2 rounded-md border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-semibold">
+          {loading ? 'Checking ledger integrity...'
+            : failed ? 'Integrity status unavailable'
+            : valid ? <span className="text-green-700">Ledger verified</span>
+            : <span className="text-destructive">Integrity violation detected</span>}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {loading ? 'Verifying the hash chain across all records.'
+            : failed ? 'Could not reach the verification service.'
+            : chain?.message}
+        </p>
+      </div>
+      {!loading && !failed && chain && (
+        <div className="text-xs text-muted-foreground sm:text-right">
+          <div>{chain.totalRecords.toLocaleString()} records</div>
+          {rootHash && (
+            <div className="font-mono" title={rootHash}>
+              root {rootHash.slice(0, 12)}...
+            </div>
           )}
-          <div>
-            <p className="font-semibold">
-              {loading ? 'Checking ledger integrity…'
-                : failed ? 'Integrity status unavailable'
-                : valid ? 'Ledger Verified' : 'Integrity Violation Detected'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {loading ? 'Verifying the hash chain across all records.'
-                : failed ? 'Could not reach the verification service.'
-                : chain?.message}
-            </p>
-          </div>
         </div>
-        {!loading && !failed && chain && (
-          <div className="text-xs text-muted-foreground sm:text-right">
-            <div>{chain.totalRecords.toLocaleString()} records</div>
-            {rootHash && (
-              <div className="font-mono" title={rootHash}>
-                root {rootHash.slice(0, 12)}…
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
 
@@ -170,16 +136,14 @@ function RecentActivity() {
   }, []);
 
   return (
-    <Card className="mt-8">
+    <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="size-5 text-primary" /> Recent Activity
-        </CardTitle>
+        <CardTitle>Recent Activity</CardTitle>
         <Link to="/audit" className="text-sm text-primary hover:underline">View all</Link>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="py-4 text-sm text-muted-foreground">Loading…</p>
+          <p className="py-4 text-sm text-muted-foreground">Loading...</p>
         ) : logs.length === 0 ? (
           <p className="py-4 text-sm text-muted-foreground">No activity yet.</p>
         ) : (
@@ -189,7 +153,7 @@ function RecentActivity() {
                 <div className="flex min-w-0 items-center gap-3">
                   <Badge
                     variant="outline"
-                    className={`shrink-0 font-mono text-xs uppercase tracking-wider ${actionClasses(log.action)}`}
+                    className={`shrink-0 text-xs ${actionClasses(log.action)}`}
                   >
                     {log.action.replace(/_/g, ' ')}
                   </Badge>
@@ -213,38 +177,29 @@ function RecentActivity() {
   );
 }
 
-// Crimson for official counts, navy for informational, gold sparingly.
-const accentBorders = [
-  'border-l-primary',
-  'border-l-civic',
-  'border-l-gold',
-  'border-l-success',
-];
-
 interface QuickAction {
   label: string;
   to: string;
-  icon: LucideIcon;
 }
 
 function getQuickActions(role: string | null): QuickAction[] {
   if (role === 'SUPER_ADMIN') {
     return [
-      { label: 'Review Transfers', to: '/transfers', icon: ArrowLeftRight },
-      { label: 'Manage Users', to: '/users', icon: Users },
-      { label: 'Audit Trail', to: '/audit', icon: ScrollText },
+      { label: 'Review pending transfers', to: '/transfers' },
+      { label: 'Manage users', to: '/users' },
+      { label: 'Audit trail', to: '/audit' },
     ];
   }
   if (role === 'MALPOT_OFFICER') {
     return [
-      { label: 'New Record', to: '/land-records/new', icon: FilePlus },
-      { label: 'Verify Records', to: '/verification', icon: ShieldCheck },
-      { label: 'Transfers', to: '/transfers', icon: ArrowLeftRight },
+      { label: 'Register a new record', to: '/land-records/new' },
+      { label: 'Verify records', to: '/verification' },
+      { label: 'Pending transfers', to: '/transfers' },
     ];
   }
   return [
-    { label: 'My Records', to: '/my-records', icon: FileText },
-    { label: 'Initiate Transfer', to: '/transfers/new', icon: ArrowLeftRight },
+    { label: 'View my records', to: '/my-records' },
+    { label: 'Start a transfer', to: '/transfers/new' },
   ];
 }
 

@@ -110,19 +110,19 @@ export function LandRecordDetailPage() {
           <Link to="/land-records" className="text-sm text-muted-foreground hover:underline">
             ← Back to records
           </Link>
-          <h1 className="text-3xl font-bold mt-1">{record.kittaNumber}</h1>
+          <h1 className="text-xl font-semibold mt-1">{record.kittaNumber}</h1>
         </div>
         <Button onClick={handleVerify} disabled={verifying}>
-          {verifying ? 'Verifying...' : 'Verify Integrity'}
+          {verifying ? 'Verifying...' : 'Verify integrity'}
         </Button>
       </div>
 
       {verification && (
-        <Card className={verification.valid ? 'border-l-[3px] border-l-success' : 'border-l-[3px] border-l-destructive'}>
+        <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`text-lg font-bold ${verification.valid ? 'text-success' : 'text-destructive'}`}>
-                {verification.valid ? '✓ VERIFIED' : '✗ INTEGRITY VIOLATION'}
+            <div className="mb-2">
+              <span className={`font-semibold ${verification.valid ? 'text-green-700' : 'text-destructive'}`}>
+                {verification.valid ? 'Record verified' : 'Integrity violation'}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{verification.message}</p>
@@ -188,7 +188,7 @@ export function LandRecordDetailPage() {
               {history.map((h, i) => (
                 <div key={h.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${!h.ownedUntil ? 'bg-success' : 'bg-muted-foreground'}`} />
+                    <div className={`w-3 h-3 rounded-full ${!h.ownedUntil ? 'bg-green-600' : 'bg-muted-foreground'}`} />
                     {i < history.length - 1 && <div className="w-0.5 flex-1 bg-border" />}
                   </div>
                   <div className="pb-4">

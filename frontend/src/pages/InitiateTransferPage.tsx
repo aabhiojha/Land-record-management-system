@@ -10,7 +10,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ChevronsUpDown, Check, Search, CheckCircle2 } from 'lucide-react';
+import { ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import type { LandRecord } from '@/types/landRecord';
@@ -91,7 +91,7 @@ export function InitiateTransferPage() {
       <Link to="/transfers" className="text-sm text-muted-foreground hover:underline">
         ← Back to transfers
       </Link>
-      <h1 className="text-3xl font-bold mt-1 mb-6">Initiate Transfer</h1>
+      <h1 className="text-xl font-semibold mt-1 mb-6">Initiate Transfer</h1>
 
       <Card className="w-full max-w-3xl">
         <CardHeader><CardTitle>Transfer Details</CardTitle></CardHeader>
@@ -152,12 +152,11 @@ export function InitiateTransferPage() {
                 <div className="rounded-md border p-4 bg-muted/30">
                   {buyer ? (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <div>
-                          <p className="font-medium">{buyer.fullName}</p>
-                          <p className="text-xs text-muted-foreground">ID: {buyer.citizenshipNumber}</p>
-                        </div>
+                      <div>
+                        <p className="font-medium">{buyer.fullName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Citizenship no. {buyer.citizenshipNumber} · verified
+                        </p>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => setBuyer(null)}>
                         Change
@@ -193,8 +192,7 @@ export function InitiateTransferPage() {
                         disabled={!buyerCitizenshipNumber || !buyerEmail || verifyingBuyer}
                         className="w-full"
                       >
-                        <Search className="mr-2 h-4 w-4" />
-                        {verifyingBuyer ? 'Verifying...' : 'Verify Buyer credentials'}
+                        {verifyingBuyer ? 'Verifying...' : 'Verify buyer'}
                       </Button>
                     </div>
                   )}

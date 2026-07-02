@@ -17,6 +17,7 @@ export function MyRecordsPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     landRecordApi.getMyRecords(page, 10)
       .then((res) => {
@@ -29,12 +30,12 @@ export function MyRecordsPage() {
 
   return (
     <div>
-      <PageHeader title="My Land Records" description="Land records registered under your name" />
+      <PageHeader title="My Land Records" />
 
       {loading ? (
         <LoadingSpinner />
       ) : records.length === 0 ? (
-        <EmptyState message="No land records found" description="You don't own any registered land records yet" />
+        <EmptyState message="No land records found" description="No records are registered under your name yet." />
       ) : (
         <div className="rounded-md border">
           <Table>

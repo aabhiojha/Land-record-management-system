@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { userApi } from '@/api/userApi';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -82,15 +82,15 @@ export function UserManagementPage() {
   return (
     <div>
       <PageHeader
-        title="User Management"
+        title="Users"
         action={
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger>
-              + Create User
+            <DialogTrigger className={buttonVariants()}>
+              Add user
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
+                <DialogTitle>Add user</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
                 {error && (

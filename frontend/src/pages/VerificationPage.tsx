@@ -56,7 +56,7 @@ export function VerificationPage() {
     <div>
       <PageHeader
         title="Verification"
-        description="Verify record integrity using Merkle Tree and Hash Chain"
+        description="Check records against the Merkle tree and hash chain."
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -106,10 +106,10 @@ export function VerificationPage() {
       </div>
 
       {recordResult && (
-        <Card className={`mt-6 border-l-[3px] ${recordResult.valid ? 'border-l-success' : 'border-l-destructive'}`}>
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle className={recordResult.valid ? 'text-success' : 'text-destructive'}>
-              {recordResult.valid ? '✓ Record Verified' : '✗ Integrity Violation Detected'}
+            <CardTitle className={recordResult.valid ? 'text-green-700' : 'text-destructive'}>
+              {recordResult.valid ? 'Record verified' : 'Integrity violation detected'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -140,10 +140,10 @@ export function VerificationPage() {
       )}
 
       {chainResult && (
-        <Card className={`mt-6 border-l-[3px] ${chainResult.valid ? 'border-l-success' : 'border-l-destructive'}`}>
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle className={chainResult.valid ? 'text-success' : 'text-destructive'}>
-              {chainResult.valid ? '✓ Hash Chain Intact' : '✗ Chain Broken'}
+            <CardTitle className={chainResult.valid ? 'text-green-700' : 'text-destructive'}>
+              {chainResult.valid ? 'Hash chain intact' : 'Hash chain broken'}
             </CardTitle>
           </CardHeader>
           <CardContent>

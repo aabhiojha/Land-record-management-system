@@ -53,11 +53,10 @@ export function LandRecordsPage() {
     <div>
       <PageHeader
         title="Land Records"
-        description="Browse and search all registered land records"
         action={
           role === 'MALPOT_OFFICER' ? (
             <Link to="/land-records/new">
-              <Button>+ New Record</Button>
+              <Button>New record</Button>
             </Link>
           ) : undefined
         }
@@ -65,7 +64,7 @@ export function LandRecordsPage() {
 
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
         <Input
-          placeholder="Search by kitta number or district..."
+          placeholder="Search by kitta number or district"
           value={search}
           onChange={handleSearchChange}
           className="max-w-sm"

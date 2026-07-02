@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationControlsProps {
   page: number;
@@ -23,7 +22,6 @@ export function PaginationControls({ page, totalPages, setPage, loading }: Pagin
           onClick={() => setPage(Math.max(0, page - 1))}
           disabled={page === 0 || loading}
         >
-          <ChevronLeft className="mr-1 h-4 w-4" />
           Previous
         </Button>
         <Button
@@ -33,7 +31,6 @@ export function PaginationControls({ page, totalPages, setPage, loading }: Pagin
           disabled={page >= totalPages - 1 || loading}
         >
           Next
-          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </div>
