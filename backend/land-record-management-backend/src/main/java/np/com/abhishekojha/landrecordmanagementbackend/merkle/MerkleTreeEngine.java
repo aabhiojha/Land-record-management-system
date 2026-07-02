@@ -9,9 +9,15 @@ import java.util.List;
 public class MerkleTreeEngine {
 
     public static String sha256(String input) {
+        return sha256(input.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // Hash raw bytes directly. Use this for binary files (PDFs, images) —
+    // decoding them into a String first corrupts the content before hashing.
+    public static String sha256(byte[] input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(input);
             StringBuilder hex = new StringBuilder(64);
             for (byte b : hash) {
                 hex.append(String.format("%02x", b));

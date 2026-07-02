@@ -13,4 +13,7 @@ public class TransferRequest {
 
     @NotNull(message = "Buyer ID is required")
     private Long buyerId;
+
+    @NotNull(message = "Transaction price is required")
+    private java.math.BigDecimal transactionPrice;
 }

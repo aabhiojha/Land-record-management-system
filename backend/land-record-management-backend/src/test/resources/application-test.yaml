@@ -17,5 +17,3 @@ app:
   jwt:
     secret: test-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-testing
     expiration-ms: 86400000
-  upload:
-    dir: ./test-uploads

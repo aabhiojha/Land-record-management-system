@@ -9,6 +9,10 @@ import np.com.abhishekojha.landrecordmanagementbackend.dto.request.TransferReque
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.TransferResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
 import np.com.abhishekojha.landrecordmanagementbackend.service.TransferService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +36,21 @@ public class TransferController {
 
     @GetMapping("/api/citizen/transfers")
     @Operation(summary = "Get my transfers (Citizen)")
-    public ResponseEntity<List<TransferResponse>> getMyTransfers(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(transferService.getTransfersByUser(user.getId()));
+    public ResponseEntity<Page<TransferResponse>> getMyTransfers(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ResponseEntity.ok(transferService.getTransfersByUser(user.getId(), pageable));
+    }
+
+    @GetMapping("/api/admin/transfers")
+    @Operation(summary = "Get all transfers (Admin)")
+    public ResponseEntity<Page<TransferResponse>> getAllTransfers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ResponseEntity.ok(transferService.getAllTransfers(pageable));
     }
 
     @GetMapping("/api/officer/transfers/pending")

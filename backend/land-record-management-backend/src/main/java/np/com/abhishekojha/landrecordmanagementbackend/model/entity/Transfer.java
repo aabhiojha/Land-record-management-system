@@ -62,4 +62,10 @@ public class Transfer {
 
     @Column(name = "new_record_hash")
     private String newRecordHash;
+
+    @Column(name = "transaction_price")
+    private java.math.BigDecimal transactionPrice;
+
+    @Column(name = "tax_amount")
+    private java.math.BigDecimal taxAmount;
 }

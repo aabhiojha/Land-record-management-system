@@ -9,6 +9,9 @@ import np.com.abhishekojha.landrecordmanagementbackend.repository.MerkleNodeRepo
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,9 +20,27 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class LandRecordIntegrityService {
 
+    /**
+     * Fixed, explicit format used when a record's creation timestamp is folded
+     * into its hash. {@code LocalDateTime.toString()} produces variable-length
+     * output (it drops trailing zero seconds/nanos) and, more importantly, the
+     * value is stored in the JVM with nanosecond precision but persisted in
+     * PostgreSQL with only microsecond precision. Hashing the raw timestamp
+     * therefore yields a different result before and after a DB round-trip,
+     * flagging untouched records as tampered. Truncating to milliseconds (a
+     * precision every backing store preserves exactly) and formatting with a
+     * fixed 3-digit fraction makes the hash stable across persistence.
+     */
+    private static final DateTimeFormatter HASH_TIMESTAMP_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
     private final LandRecordRepository landRecordRepository;
     private final MerkleNodeRepository merkleNodeRepository;
     private final MerkleTreeEngine merkleTreeEngine;
+
+    static String canonicalTimestamp(LocalDateTime timestamp) {
+        return timestamp.truncatedTo(ChronoUnit.MILLIS).format(HASH_TIMESTAMP_FORMAT);
+    }
 
     public String computeHash(LandRecord record) {
         String previousHash = record.getPreviousRecordHash();
@@ -31,7 +52,7 @@ public class LandRecordIntegrityService {
                 record.getMunicipality(),
                 record.getWardNumber(),
                 record.getLandType().name(),
-                record.getCreatedAt().toString(),
+                canonicalTimestamp(record.getCreatedAt()),
                 previousHash
         );
         return MerkleTreeEngine.computeRecordHash(input);
@@ -76,6 +97,15 @@ public class LandRecordIntegrityService {
         int newVersion = merkleNodeRepository.findLatestTreeVersion().orElse(0) + 1;
 
         persistTree(result.getRoot(), null, records, newVersion);
+
+        // Each rebuild persists a full copy of the tree. Without pruning,
+        // merkle_nodes grows by O(records) on every create and every approved
+        // transfer and never shrinks. Only the latest version is ever read, so
+        // drop the superseded snapshots to keep storage bounded to one tree.
+        // Links are detached first so the delete does not trip the
+        // self-referential foreign keys on stricter databases.
+        merkleNodeRepository.detachLinksByTreeVersionLessThan(newVersion);
+        merkleNodeRepository.deleteByTreeVersionLessThan(newVersion);
     }
 
     private MerkleNodeEntity persistTree(MerkleNode node, MerkleNodeEntity parent,
@@ -128,33 +158,67 @@ public class LandRecordIntegrityService {
 
     public List<ProofStep> generateProof(LandRecord record) {
         List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
+        return generateProof(record, records);
+    }
+
+    private List<ProofStep> generateProof(LandRecord record, List<LandRecord> records) {
         List<String> leafHashes = records.stream()
                 .map(LandRecord::getRecordHash)
                 .toList();
 
-        int leafIndex = -1;
-        for (int i = 0; i < records.size(); i++) {
-            if (records.get(i).getId().equals(record.getId())) {
-                leafIndex = i;
-                break;
-            }
-        }
-
+        int leafIndex = indexOf(records, record.getId());
         if (leafIndex == -1) return List.of();
 
         return merkleTreeEngine.generateProof(leafIndex, leafHashes);
     }
 
     public boolean verifyProof(LandRecord record) {
+        return fullVerification(record).proofValid();
+    }
+
+    private static int indexOf(List<LandRecord> records, Long recordId) {
+        for (int i = 0; i < records.size(); i++) {
+            if (records.get(i).getId().equals(recordId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Snapshot of a single record's integrity check. Carries everything the
+     * verification endpoint needs so it can be produced from one active-record
+     * load and one Merkle tree build, instead of re-loading the whole table
+     * and rebuilding the tree once per field (hash, proof, root).
+     */
+    public record RecordVerification(
+            String computedHash,
+            boolean hashValid,
+            List<ProofStep> proof,
+            String merkleRootHash,
+            boolean proofValid
+    ) {}
+
+    @Transactional(readOnly = true)
+    public RecordVerification fullVerification(LandRecord record) {
         List<LandRecord> records = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         List<String> leafHashes = records.stream()
                 .map(LandRecord::getRecordHash)
                 .toList();
 
-        MerkleTreeResult tree = merkleTreeEngine.buildTree(leafHashes);
-        List<ProofStep> proof = generateProof(record);
+        String computedHash = computeHash(record);
+        boolean hashValid = computedHash.equals(record.getRecordHash());
 
-        return merkleTreeEngine.verifyProof(record.getRecordHash(), proof, tree.getRootHash());
+        String rootHash = records.isEmpty()
+                ? null
+                : merkleTreeEngine.buildTree(leafHashes).getRootHash();
+
+        List<ProofStep> proof = generateProof(record, records);
+        boolean proofValid = hashValid
+                && rootHash != null
+                && merkleTreeEngine.verifyProof(record.getRecordHash(), proof, rootHash);
+
+        return new RecordVerification(computedHash, hashValid, proof, rootHash, proofValid);
     }
 
     public List<LandRecordHashInput> buildChainInputs() {
@@ -170,7 +234,7 @@ public class LandRecordIntegrityService {
                     record.getMunicipality(),
                     record.getWardNumber(),
                     record.getLandType().name(),
-                    record.getCreatedAt().toString(),
+                    canonicalTimestamp(record.getCreatedAt()),
                     record.getPreviousRecordHash()
             ));
         }

@@ -11,6 +11,8 @@ import np.com.abhishekojha.landrecordmanagementbackend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -49,11 +51,21 @@ public class TransferService {
             throw new BadRequestException("This land record already has a pending transfer");
         }
 
+        java.math.BigDecimal transactionPrice = request.getTransactionPrice();
+        if (transactionPrice.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Transaction price must be greater than zero");
+        }
+        
+        // Simple 5% tax calculation logic
+        java.math.BigDecimal taxAmount = transactionPrice.multiply(new java.math.BigDecimal("0.05"));
+
         Transfer transfer = Transfer.builder()
                 .landRecord(record)
                 .seller(seller)
                 .buyer(buyer)
                 .oldRecordHash(record.getRecordHash())
+                .transactionPrice(transactionPrice)
+                .taxAmount(taxAmount)
                 .build();
 
         transfer = transferRepository.save(transfer);
@@ -163,10 +175,14 @@ public class TransferService {
         return toResponse(findTransfer(id));
     }
 
-    public List<TransferResponse> getTransfersByUser(Long userId) {
-        return transferRepository.findBySellerIdOrBuyerId(userId, userId).stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<TransferResponse> getTransfersByUser(Long userId, Pageable pageable) {
+        return transferRepository.findBySellerIdOrBuyerId(userId, userId, pageable)
+                .map(this::toResponse);
+    }
+
+    public Page<TransferResponse> getAllTransfers(Pageable pageable) {
+        return transferRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     public List<TransferResponse> getPendingVerification() {
@@ -204,6 +220,8 @@ public class TransferService {
                 .rejectionReason(t.getRejectionReason())
                 .oldRecordHash(t.getOldRecordHash())
                 .newRecordHash(t.getNewRecordHash())
+                .transactionPrice(t.getTransactionPrice())
+                .taxAmount(t.getTaxAmount())
                 .build();
     }
 }

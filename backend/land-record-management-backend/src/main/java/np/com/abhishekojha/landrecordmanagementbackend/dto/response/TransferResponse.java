@@ -27,4 +27,6 @@ public class TransferResponse {
     private String rejectionReason;
     private String oldRecordHash;
     private String newRecordHash;
+    private java.math.BigDecimal transactionPrice;
+    private java.math.BigDecimal taxAmount;
 }

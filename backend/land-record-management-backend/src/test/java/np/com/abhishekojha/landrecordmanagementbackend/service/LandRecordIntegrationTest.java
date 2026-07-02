@@ -11,7 +11,9 @@ import np.com.abhishekojha.landrecordmanagementbackend.model.entity.LandRecord;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
 import np.com.abhishekojha.landrecordmanagementbackend.model.enums.UserRole;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.LandRecordRepository;
+import np.com.abhishekojha.landrecordmanagementbackend.repository.MerkleNodeRepository;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,8 @@ class LandRecordIntegrationTest {
     @Autowired private LandRecordIntegrityService integrityService;
     @Autowired private LandRecordRepository landRecordRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private MerkleNodeRepository merkleNodeRepository;
+    @Autowired private EntityManager entityManager;
 
     private User officer;
     private User admin;
@@ -87,6 +91,7 @@ class LandRecordIntegrationTest {
         TransferRequest transferReq = new TransferRequest();
         transferReq.setLandRecordId(record.getId());
         transferReq.setBuyerId(citizen2.getId());
+        transferReq.setTransactionPrice(new java.math.BigDecimal("1000000"));
         TransferResponse transfer = transferService.initiateTransfer(transferReq, citizen1);
         assertEquals("INITIATED", transfer.getStatus());
 
@@ -114,6 +119,7 @@ class LandRecordIntegrationTest {
         TransferRequest transferReq = new TransferRequest();
         transferReq.setLandRecordId(middle.getId());
         transferReq.setBuyerId(citizen2.getId());
+        transferReq.setTransactionPrice(new java.math.BigDecimal("1000000"));
         TransferResponse transfer = transferService.initiateTransfer(transferReq, citizen1);
         transfer = transferService.verifyTransfer(transfer.getId(), officer);
         transferService.approveTransfer(transfer.getId(), admin);
@@ -135,6 +141,7 @@ class LandRecordIntegrationTest {
         TransferRequest transferReq = new TransferRequest();
         transferReq.setLandRecordId(record.getId());
         transferReq.setBuyerId(citizen2.getId());
+        transferReq.setTransactionPrice(new java.math.BigDecimal("1000000"));
         TransferResponse transfer = transferService.initiateTransfer(transferReq, citizen1);
 
         transfer = transferService.rejectTransfer(transfer.getId(), "Missing documents", admin);
@@ -155,6 +162,35 @@ class LandRecordIntegrationTest {
         assertNotNull(proof);
 
         assertTrue(integrityService.verifyProof(record));
+    }
+
+    @Test
+    void recordHash_survivesPersistenceRoundTrip() {
+        LandRecordResponse response = createRecord("KTM-1001", citizen1.getId());
+
+        // Force the entity out of the first-level cache so it is re-read from
+        // the database, picking up whatever timestamp precision the store keeps.
+        entityManager.flush();
+        entityManager.clear();
+
+        LandRecord reloaded = landRecordRepository.findById(response.getId()).orElseThrow();
+        assertTrue(integrityService.verifyRecordHash(reloaded),
+                "Stored hash must still match after the record is reloaded from the DB");
+    }
+
+    @Test
+    void rebuildMerkleTree_prunesSupersededVersions() {
+        createRecord("KTM-1001", citizen1.getId());
+        createRecord("KTM-1002", citizen2.getId());
+        createRecord("KTM-1003", citizen1.getId());
+
+        // Three creates each rebuild the tree, but only the newest snapshot
+        // should remain persisted.
+        Integer latest = merkleNodeRepository.findLatestTreeVersion().orElseThrow();
+        long stale = merkleNodeRepository.findAll().stream()
+                .filter(n -> !n.getTreeVersion().equals(latest))
+                .count();
+        assertEquals(0, stale, "Superseded Merkle tree versions must be pruned");
     }
 
     private LandRecordResponse createRecord(String kitta, Long ownerId) {

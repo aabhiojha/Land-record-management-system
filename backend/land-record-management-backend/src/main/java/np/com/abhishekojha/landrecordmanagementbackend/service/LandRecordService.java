@@ -16,6 +16,8 @@ import np.com.abhishekojha.landrecordmanagementbackend.repository.UserRepository
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -30,6 +32,22 @@ public class LandRecordService {
 
     @Transactional
     public LandRecordResponse createLandRecord(LandRecordRequest request) {
+        LandRecordResponse response = createLandRecordInternal(request);
+        integrityService.rebuildMerkleTree();
+        return response;
+    }
+
+    @Transactional
+    public List<LandRecordResponse> createLandRecordsBulk(List<LandRecordRequest> requests) {
+        List<LandRecordResponse> responses = new java.util.ArrayList<>();
+        for (LandRecordRequest request : requests) {
+            responses.add(createLandRecordInternal(request));
+        }
+        integrityService.rebuildMerkleTree();
+        return responses;
+    }
+
+    private LandRecordResponse createLandRecordInternal(LandRecordRequest request) {
         if (landRecordRepository.existsByKittaNumber(request.getKittaNumber())) {
             throw new BadRequestException("Kitta number already exists: " + request.getKittaNumber());
         }
@@ -44,6 +62,8 @@ public class LandRecordService {
             throw new BadRequestException("Invalid land type: " + request.getLandType());
         }
 
+        // We flush the repository to ensure that findByIsActiveTrueOrderByIdAsc picks up the latest record
+        landRecordRepository.flush();
         List<LandRecord> existing = landRecordRepository.findByIsActiveTrueOrderByIdAsc();
         String previousHash = existing.isEmpty() ? null : existing.getLast().getRecordHash();
 
@@ -70,18 +90,15 @@ public class LandRecordService {
                 .build();
         ownershipHistoryRepository.save(history);
 
-        integrityService.rebuildMerkleTree();
-
         auditService.log(owner, "CREATE_RECORD", "LandRecord", record.getId(),
                 "Created land record " + record.getKittaNumber());
 
         return toResponse(record);
     }
 
-    public List<LandRecordResponse> getAllRecords() {
-        return landRecordRepository.findByIsActiveTrueOrderByIdAsc().stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<LandRecordResponse> getAllRecords(Pageable pageable) {
+        return landRecordRepository.findByIsActiveTrue(pageable)
+                .map(this::toResponse);
     }
 
     public LandRecordResponse getRecord(Long id) {
@@ -90,18 +107,15 @@ public class LandRecordService {
         return toResponse(record);
     }
 
-    public List<LandRecordResponse> getRecordsByOwner(Long ownerId) {
-        return landRecordRepository.findByCurrentOwnerId(ownerId).stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<LandRecordResponse> getRecordsByOwner(Long ownerId, Pageable pageable) {
+        return landRecordRepository.findByCurrentOwnerId(ownerId, pageable)
+                .map(this::toResponse);
     }
 
-    public List<LandRecordResponse> searchRecords(String query) {
+    public Page<LandRecordResponse> searchRecords(String query, Pageable pageable) {
         return landRecordRepository
-                .findByKittaNumberContainingIgnoreCaseOrDistrictContainingIgnoreCase(query, query)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                .findByKittaNumberContainingIgnoreCaseOrDistrictContainingIgnoreCase(query, query, pageable)
+                .map(this::toResponse);
     }
 
     public List<OwnershipHistoryResponse> getOwnershipHistory(Long recordId) {
