@@ -26,6 +26,7 @@ One file per diagram:
 | 10 | [10-component-diagram.md](10-component-diagram.md) | Component | 4.1 Component Diagram |
 | 11 | [11-deployment-diagram.md](11-deployment-diagram.md) | Deployment | 4.1 Deployment Diagram |
 | 12 | [12-system-flowchart.md](12-system-flowchart.md) | System Flowchart (overall program flow) | supplementary |
+| 13 | [13-system-architecture.md](13-system-architecture.md) | System Architecture (whole-system view) | 4.1 System Architecture |
 
 Rendered images (SVG + high-res PNG) for every diagram are in [`images/`](images/).
 
