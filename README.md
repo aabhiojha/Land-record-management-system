@@ -25,7 +25,25 @@ A land record digitization web application for Nepal's land administration syste
 - Node.js 20+
 - PostgreSQL 15+
 
-## Setup
+## Run with Docker (recommended)
+
+The whole stack (PostgreSQL + Spring Boot backend + React frontend behind nginx)
+is containerized. You only need Docker with the Compose plugin.
+
+```bash
+cp .env.example .env      # then edit secrets (JWT_SECRET, DB_PASSWORD)
+docker compose up --build
+```
+
+- Web app: `http://localhost:8081` (nginx serves the frontend and reverse-proxies `/api` to the backend)
+- Backend and database run on the internal Compose network; the DB is not published to the host.
+- Flyway runs migrations automatically, and the app seeds sample data on first boot.
+- Uploaded documents and the database persist in the `uploads` and `pgdata` volumes.
+
+Override the published web port with `FRONTEND_PORT` in `.env`. Stop with
+`docker compose down` (add `-v` to also wipe the volumes).
+
+## Setup (local, without Docker)
 
 ### Database
 
