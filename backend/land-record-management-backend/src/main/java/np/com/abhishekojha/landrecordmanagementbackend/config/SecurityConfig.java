@@ -1,5 +1,6 @@
 package np.com.abhishekojha.landrecordmanagementbackend.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,13 +36,18 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Unauthenticated (missing/expired token) -> 401 so the client can
+                // refresh; role denials still fall through to the default 403.
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                        (request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/officer/**").hasRole("MALPOT_OFFICER")
                         .requestMatchers("/api/citizen/**").hasRole("CITIZEN")
-                        .requestMatchers(HttpMethod.GET, "/api/land-records/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/land-records/**").hasAnyRole("MALPOT_OFFICER", "SUPER_ADMIN")
                         .requestMatchers("/api/verification/**").authenticated()
                         .requestMatchers("/api/documents/**").authenticated()
                         .anyRequest().authenticated()
@@ -64,7 +70,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", 
+        "http://localhost:5174",
+         "https://malpot.abhishekojha.com.np", 
+         "http://localhost:8081"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

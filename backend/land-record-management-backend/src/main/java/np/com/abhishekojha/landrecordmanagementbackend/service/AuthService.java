@@ -9,6 +9,7 @@ import np.com.abhishekojha.landrecordmanagementbackend.dto.response.UserResponse
 import np.com.abhishekojha.landrecordmanagementbackend.exception.BadRequestException;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.UnauthorizedException;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
+import np.com.abhishekojha.landrecordmanagementbackend.model.entity.RefreshToken;
 import np.com.abhishekojha.landrecordmanagementbackend.model.enums.UserRole;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -43,9 +45,11 @@ public class AuthService {
         user = userRepository.save(user);
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
@@ -66,9 +70,11 @@ public class AuthService {
         }
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
@@ -88,5 +94,25 @@ public class AuthService {
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    public AuthResponse refreshToken(String requestRefreshToken) {
+        RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken);
+        refreshTokenService.verifyExpirationAndStatus(refreshToken);
+        User user = refreshToken.getUser();
+        String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        
+        return AuthResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken.getToken())
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    public void logout(User user) {
+        refreshTokenService.revokeAllUserTokens(user);
     }
 }

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.request.LoginRequest;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.request.RegisterRequest;
+import np.com.abhishekojha.landrecordmanagementbackend.dto.request.RefreshTokenRequest;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.AuthResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.UserResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
@@ -48,5 +49,18 @@ public class AuthController {
     @ApiResponse(responseCode = "401", description = "Not authenticated")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(authService.getCurrentUser(user));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token", description = "Get a new access token using a valid refresh token.")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout user", description = "Revokes all refresh tokens for the authenticated user.")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
+        authService.logout(user);
+        return ResponseEntity.ok().build();
     }
 }
