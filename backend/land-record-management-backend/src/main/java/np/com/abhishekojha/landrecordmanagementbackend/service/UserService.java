@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -21,10 +23,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     @Transactional
@@ -65,10 +66,25 @@ public class UserService {
         return toResponse(user);
     }
 
-    public List<UserResponse> getUsersByRole(UserRole role) {
-        return userRepository.findByRole(role).stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<UserResponse> getOfficers(Pageable pageable) {
+        return userRepository.findByRole(UserRole.MALPOT_OFFICER, pageable)
+                .map(this::toResponse);
+    }
+
+    public Page<UserResponse> getUsersByRole(UserRole role, Pageable pageable) {
+        return userRepository.findByRole(role, pageable)
+                .map(this::toResponse);
+    }
+
+    public UserResponse searchBuyer(String citizenshipNumber, String email) {
+        User user = userRepository.findByCitizenshipNumberAndEmail(citizenshipNumber, email)
+                .orElseThrow(() -> new ResourceNotFoundException("No citizen found with the provided details"));
+                
+        if (user.getRole() != UserRole.CITIZEN) {
+            throw new BadRequestException("User is not a citizen");
+        }
+        
+        return toResponse(user);
     }
 
     private UserResponse toResponse(User user) {

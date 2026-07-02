@@ -36,25 +36,19 @@ public class VerificationController {
         LandRecord record = landRecordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Land record not found: " + id));
 
-        String computedHash = integrityService.computeHash(record);
-        boolean hashValid = computedHash.equals(record.getRecordHash());
-
-        List<ProofStep> proof = integrityService.generateProof(record);
-        boolean proofValid = hashValid && integrityService.verifyProof(record);
-
-        String rootHash = integrityService.getCurrentMerkleRoot();
+        LandRecordIntegrityService.RecordVerification result = integrityService.fullVerification(record);
 
         return ResponseEntity.ok(VerificationResponse.builder()
                 .recordId(record.getId())
                 .kittaNumber(record.getKittaNumber())
-                .valid(proofValid)
-                .computedHash(computedHash)
+                .valid(result.proofValid())
+                .computedHash(result.computedHash())
                 .storedHash(record.getRecordHash())
-                .merkleRootHash(rootHash)
-                .merkleProof(proof.stream()
+                .merkleRootHash(result.merkleRootHash())
+                .merkleProof(result.proof().stream()
                         .map(VerificationResponse.ProofStepResponse::from)
                         .toList())
-                .message(proofValid ? "Record integrity verified" : "INTEGRITY VIOLATION DETECTED")
+                .message(result.proofValid() ? "Record integrity verified" : "INTEGRITY VIOLATION DETECTED")
                 .build());
     }
 

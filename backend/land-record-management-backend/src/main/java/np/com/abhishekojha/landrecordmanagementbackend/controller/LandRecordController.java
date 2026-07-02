@@ -9,6 +9,10 @@ import np.com.abhishekojha.landrecordmanagementbackend.dto.response.LandRecordRe
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.OwnershipHistoryResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
 import np.com.abhishekojha.landrecordmanagementbackend.service.LandRecordService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,13 +32,23 @@ public class LandRecordController {
         return ResponseEntity.ok(landRecordService.createLandRecord(request));
     }
 
+    @PostMapping("/api/officer/land-records/bulk")
+    @Operation(summary = "Bulk create new land records (Officer only)")
+    public ResponseEntity<List<LandRecordResponse>> createBulk(@Valid @RequestBody List<LandRecordRequest> requests) {
+        return ResponseEntity.ok(landRecordService.createLandRecordsBulk(requests));
+    }
+
     @GetMapping("/api/land-records")
     @Operation(summary = "List all active land records")
-    public ResponseEntity<List<LandRecordResponse>> getAll(@RequestParam(required = false) String search) {
+    public ResponseEntity<Page<LandRecordResponse>> getAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         if (search != null && !search.isBlank()) {
-            return ResponseEntity.ok(landRecordService.searchRecords(search));
+            return ResponseEntity.ok(landRecordService.searchRecords(search, pageable));
         }
-        return ResponseEntity.ok(landRecordService.getAllRecords());
+        return ResponseEntity.ok(landRecordService.getAllRecords(pageable));
     }
 
     @GetMapping("/api/land-records/{id}")
@@ -51,8 +65,12 @@ public class LandRecordController {
 
     @GetMapping("/api/citizen/my-records")
     @Operation(summary = "Get current citizen's land records")
-    public ResponseEntity<List<LandRecordResponse>> getMyRecords(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(landRecordService.getRecordsByOwner(user.getId()));
+    public ResponseEntity<Page<LandRecordResponse>> getMyRecords(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        return ResponseEntity.ok(landRecordService.getRecordsByOwner(user.getId(), pageable));
     }
 
 }

@@ -4,6 +4,8 @@ import np.com.abhishekojha.landrecordmanagementbackend.model.entity.Transfer;
 import np.com.abhishekojha.landrecordmanagementbackend.model.enums.TransferStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
@@ -11,6 +13,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     List<Transfer> findByStatus(TransferStatus status);
 
     List<Transfer> findBySellerIdOrBuyerId(Long sellerId, Long buyerId);
+    Page<Transfer> findBySellerIdOrBuyerId(Long sellerId, Long buyerId, Pageable pageable);
 
     List<Transfer> findByLandRecordId(Long landRecordId);
 
