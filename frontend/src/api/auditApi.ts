@@ -2,11 +2,14 @@ import api from './axiosConfig';
 
 export interface AuditLog {
   id: number;
-  userId: number;
-  userEmail: string;
+  system: boolean;
+  userName: string | null;
+  userEmail: string | null;
+  userRole: string | null;
   action: string;
   entityType: string;
-  entityId: number;
+  entityLabel: string | null;
+  landRecordId: number | null;
   details: string;
   createdAt: string;
 }

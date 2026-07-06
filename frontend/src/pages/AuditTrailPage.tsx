@@ -8,23 +8,53 @@ import { Badge } from '@/components/ui/badge';
 import { PaginationControls } from '@/components/common/PaginationControls';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
-import { actionClasses, relativeTime } from '@/lib/auditFormat';
+import {
+  actionClasses,
+  actionLabel,
+  actorName,
+  entityTypeLabel,
+  relativeTime,
+  roleLabel,
+  targetLabel,
+} from '@/lib/auditFormat';
 
-// Link the target to its record page when we have one; otherwise show plain text.
+// The acting user: their name and role, or a "System" marker for automated entries.
+function ActorCell({ log }: { log: AuditLog }) {
+  if (log.system) {
+    return <span className="font-medium text-muted-foreground">System</span>;
+  }
+  return (
+    <div className="min-w-0">
+      <div className="truncate font-medium">{actorName(log)}</div>
+      {log.userRole && (
+        <div className="text-xs text-muted-foreground">{roleLabel(log.userRole)}</div>
+      )}
+    </div>
+  );
+}
+
+// The target of the action, shown by human-readable reference (never a raw id).
+// Links to the record's detail page when we know which record it belongs to.
 function TargetCell({ log }: { log: AuditLog }) {
-  const label = (
+  const label = targetLabel(log);
+  const kind = entityTypeLabel(log.entityType);
+  const showKind = log.entityLabel != null && kind !== label;
+
+  const body = (
     <>
-      {log.entityType} <span className="text-muted-foreground">#{log.entityId}</span>
+      <span>{label}</span>
+      {showKind && <span className="ml-1.5 text-xs text-muted-foreground">{kind}</span>}
     </>
   );
-  if (log.entityType === 'LandRecord' && log.entityId != null) {
+
+  if (log.landRecordId != null) {
     return (
-      <Link to={`/land-records/${log.entityId}`} className="text-primary hover:underline">
-        {label}
+      <Link to={`/land-records/${log.landRecordId}`} className="text-primary hover:underline">
+        {body}
       </Link>
     );
   }
-  return <span>{label}</span>;
+  return <span>{body}</span>;
 }
 
 export function AuditTrailPage() {
@@ -38,7 +68,7 @@ export function AuditTrailPage() {
     let active = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    auditApi.getLogs(page, 10)
+    auditApi.getLogs(page, 15)
       .then(res => {
         if (active) {
           setLogs(res.data.content);
@@ -60,11 +90,14 @@ export function AuditTrailPage() {
     <div className="w-full">
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Audit Trail</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          An immutable record of every action taken across the system.
+        </p>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Activity Log</CardTitle>
           <div className="text-sm text-muted-foreground">
             {totalElements.toLocaleString()} {totalElements === 1 ? 'entry' : 'entries'}
           </div>
@@ -78,59 +111,48 @@ export function AuditTrailPage() {
               description="Actions like record creation and transfers will appear here."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>When</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => {
-                  const isSystem = !log.userId;
-                  return (
-                    <TableRow key={log.id}>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[140px]">When</TableHead>
+                    <TableHead className="w-[180px]">Performed by</TableHead>
+                    <TableHead className="w-[150px]">Action</TableHead>
+                    <TableHead className="w-[200px]">Target</TableHead>
+                    <TableHead>Details</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => (
+                    <TableRow key={log.id} className="align-top">
                       <TableCell
-                        className="text-xs text-muted-foreground whitespace-nowrap"
+                        className="whitespace-nowrap text-xs text-muted-foreground"
                         title={new Date(log.createdAt).toLocaleString()}
                       >
                         {relativeTime(log.createdAt)}
                       </TableCell>
-                      <TableCell>
-                        {isSystem ? (
-                          <span className="font-medium text-muted-foreground">System</span>
-                        ) : (
-                          <>
-                            <div className="font-medium">{log.userEmail}</div>
-                            <div className="text-xs text-muted-foreground">ID: {log.userId}</div>
-                          </>
-                        )}
+                      <TableCell className="text-sm">
+                        <ActorCell log={log} />
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={`text-xs ${actionClasses(log.action)}`}
+                          className={`text-xs font-medium ${actionClasses(log.action)}`}
                         >
-                          {log.action.replace(/_/g, ' ')}
+                          {actionLabel(log.action)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
                         <TargetCell log={log} />
                       </TableCell>
-                      <TableCell
-                        className="text-xs text-muted-foreground max-w-[300px] truncate"
-                        title={log.details}
-                      >
+                      <TableCell className="text-sm text-muted-foreground">
                         {log.details || <span className="text-muted-foreground/50">&mdash;</span>}
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

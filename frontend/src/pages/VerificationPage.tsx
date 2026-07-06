@@ -135,7 +135,7 @@ export function VerificationPage() {
             <div className="grid gap-2 text-sm">
               <div>
                 <span className="text-muted-foreground">Record: </span>
-                <span className="font-medium">{recordResult.kittaNumber} (ID: {recordResult.recordId})</span>
+                <span className="font-medium">Kitta {recordResult.kittaNumber}</span>
               </div>
             </div>
             <div className="space-y-1">

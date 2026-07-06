@@ -1,8 +1,13 @@
 package np.com.abhishekojha.landrecordmanagementbackend.service;
 
+import np.com.abhishekojha.landrecordmanagementbackend.dto.response.AuditLogResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.AuditLog;
+import np.com.abhishekojha.landrecordmanagementbackend.model.entity.LandRecord;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
+import np.com.abhishekojha.landrecordmanagementbackend.model.enums.UserRole;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.AuditLogRepository;
+import np.com.abhishekojha.landrecordmanagementbackend.repository.LandRecordRepository;
+import np.com.abhishekojha.landrecordmanagementbackend.repository.TransferRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,6 +28,8 @@ import static org.mockito.Mockito.*;
 class AuditServiceTest {
 
     @Mock private AuditLogRepository auditLogRepository;
+    @Mock private LandRecordRepository landRecordRepository;
+    @Mock private TransferRepository transferRepository;
 
     @InjectMocks
     private AuditService auditService;
@@ -68,5 +75,46 @@ class AuditServiceTest {
                 .thenReturn(logs);
 
         assertSame(logs, auditService.getByEntity("LandRecord", 5L));
+    }
+
+    @Test
+    void getAuditLogResponses_ResolvesLandRecordLabelAndActor() {
+        Pageable pageable = PageRequest.of(0, 10);
+        User actor = User.builder().id(1L).fullName("Ram Thapa").email("ram@example.com")
+                .role(UserRole.MALPOT_OFFICER).build();
+        AuditLog log = AuditLog.builder()
+                .id(9L).user(actor).action("CREATE_RECORD")
+                .entityType("LandRecord").entityId(55L).details("Created land record KTM-1")
+                .build();
+        when(auditLogRepository.findAll(pageable))
+                .thenReturn(new PageImpl<>(List.of(log), pageable, 1));
+        when(landRecordRepository.findAllById(List.of(55L)))
+                .thenReturn(List.of(LandRecord.builder().id(55L).kittaNumber("KTM-1").build()));
+        when(transferRepository.findAllById(List.of())).thenReturn(List.of());
+
+        AuditLogResponse res = auditService.getAuditLogResponses(pageable).getContent().get(0);
+
+        assertFalse(res.isSystem());
+        assertEquals("Ram Thapa", res.getUserName());
+        assertEquals("MALPOT_OFFICER", res.getUserRole());
+        assertEquals("Kitta KTM-1", res.getEntityLabel());
+        assertEquals(55L, res.getLandRecordId());
+    }
+
+    @Test
+    void getAuditLogResponses_MarksEntriesWithoutUserAsSystem() {
+        Pageable pageable = PageRequest.of(0, 10);
+        AuditLog log = AuditLog.builder()
+                .id(3L).user(null).action("REBUILD_TREE").entityType("System").build();
+        when(auditLogRepository.findAll(pageable))
+                .thenReturn(new PageImpl<>(List.of(log), pageable, 1));
+        when(landRecordRepository.findAllById(List.of())).thenReturn(List.of());
+        when(transferRepository.findAllById(List.of())).thenReturn(List.of());
+
+        AuditLogResponse res = auditService.getAuditLogResponses(pageable).getContent().get(0);
+
+        assertTrue(res.isSystem());
+        assertNull(res.getUserName());
+        assertNull(res.getEntityLabel());
     }
 }

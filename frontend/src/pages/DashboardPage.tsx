@@ -9,7 +9,7 @@ import type { ChainVerificationResult } from '@/types/verification';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { actionClasses, relativeTime } from '@/lib/auditFormat';
+import { actionClasses, actionLabel, activitySummary, actorName, relativeTime } from '@/lib/auditFormat';
 
 export function DashboardPage() {
   const { fullName, role } = useAuthStore();
@@ -149,21 +149,21 @@ function RecentActivity() {
         ) : (
           <div className="divide-y">
             {logs.map((log) => (
-              <div key={log.id} className="flex items-center justify-between gap-3 py-2.5">
-                <div className="flex min-w-0 items-center gap-3">
+              <div key={log.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="flex min-w-0 items-start gap-3">
                   <Badge
                     variant="outline"
-                    className={`shrink-0 text-xs ${actionClasses(log.action)}`}
+                    className={`mt-0.5 shrink-0 text-xs font-medium ${actionClasses(log.action)}`}
                   >
-                    {log.action.replace(/_/g, ' ')}
+                    {actionLabel(log.action)}
                   </Badge>
-                  <span className="truncate text-sm">
-                    {log.entityType} <span className="text-muted-foreground">#{log.entityId}</span>
-                    <span className="text-muted-foreground"> · {log.userId ? log.userEmail : 'System'}</span>
-                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm">{activitySummary(log)}</p>
+                    <p className="text-xs text-muted-foreground">by {actorName(log)}</p>
+                  </div>
                 </div>
                 <span
-                  className="shrink-0 text-xs text-muted-foreground"
+                  className="shrink-0 whitespace-nowrap text-xs text-muted-foreground"
                   title={new Date(log.createdAt).toLocaleString()}
                 >
                   {relativeTime(log.createdAt)}
