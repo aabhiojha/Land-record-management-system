@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:8080",
+      "url": "http://localhost:8080",
       "description": "Generated server url"
     }
   ],
@@ -40,6 +40,10 @@
     {
       "name": "Verification",
       "description": "Merkle tree and hash chain verification"
+    },
+    {
+      "name": "Audit Log",
+      "description": "Admin audit trail"
     },
     {
       "name": "User Management",
@@ -269,6 +273,43 @@
         }
       }
     },
+    "/api/officer/land-records/bulk": {
+      "post": {
+        "tags": [
+          "Land Records"
+        ],
+        "summary": "Bulk create new land records (Officer only)",
+        "operationId": "createBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LandRecordRequest"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LandRecordResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/documents/upload": {
       "post": {
         "tags": [
@@ -343,16 +384,35 @@
         ],
         "summary": "Get my transfers (Citizen)",
         "operationId": "getMyTransfers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TransferResponse"
-                  }
+                  "$ref": "#/components/schemas/PageTransferResponse"
                 }
               }
             }
@@ -431,6 +491,53 @@
         }
       }
     },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh access token",
+        "description": "Get a new access token using a valid refresh token.",
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout user",
+        "description": "Revokes all refresh tokens for the authenticated user.",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -478,18 +585,37 @@
         "tags": [
           "User Management"
         ],
-        "summary": "List all users",
-        "operationId": "getAll",
+        "summary": "List all users (Admin only)",
+        "operationId": "getAllUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  }
+                  "$ref": "#/components/schemas/PageUserResponse"
                 }
               }
             }
@@ -519,6 +645,27 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/verification/tree": {
+      "get": {
+        "tags": [
+          "Verification"
+        ],
+        "summary": "Get the full current Merkle tree, level by level, for visualization",
+        "operationId": "getTree",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerkleTreeResponse"
                 }
               }
             }
@@ -638,30 +785,6 @@
         }
       }
     },
-    "/api/users/citizens": {
-      "get": {
-        "tags": [
-          "User Lookup"
-        ],
-        "summary": "List all citizens (any authenticated user)",
-        "operationId": "getCitizens",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/officer/transfers/pending": {
       "get": {
         "tags": [
@@ -708,20 +831,32 @@
         }
       }
     },
-    "/api/land-records": {
+    "/api/officer/citizens": {
       "get": {
         "tags": [
-          "Land Records"
+          "User Lookup"
         ],
-        "summary": "List all active land records",
-        "operationId": "getAll_1",
+        "summary": "List all citizens (Officer only)",
+        "operationId": "getCitizensForOfficer",
         "parameters": [
           {
-            "name": "search",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
             }
           }
         ],
@@ -731,10 +866,58 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LandRecordResponse"
-                  }
+                  "$ref": "#/components/schemas/PageUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/land-records": {
+      "get": {
+        "tags": [
+          "Land Records"
+        ],
+        "summary": "List all active land records",
+        "operationId": "getAll",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageLandRecordResponse"
                 }
               }
             }
@@ -916,16 +1099,35 @@
         ],
         "summary": "Get current citizen's land records",
         "operationId": "getMyRecords",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LandRecordResponse"
-                  }
+                  "$ref": "#/components/schemas/PageLandRecordResponse"
                 }
               }
             }
@@ -948,6 +1150,45 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/citizen/buyer-search": {
+      "get": {
+        "tags": [
+          "User Lookup"
+        ],
+        "summary": "Search for a buyer by exact credentials",
+        "operationId": "searchBuyer",
+        "parameters": [
+          {
+            "name": "citizenshipNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -980,6 +1221,92 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/officers": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "List all Malpot Officers (Admin only)",
+        "operationId": "getOfficers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/transfers": {
+      "get": {
+        "tags": [
+          "Transfers"
+        ],
+        "summary": "Get all transfers (Admin)",
+        "operationId": "getAllTransfers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageTransferResponse"
                 }
               }
             }
@@ -1026,6 +1353,49 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit": {
+      "get": {
+        "tags": [
+          "Audit Log"
+        ],
+        "summary": "Get paginated audit logs",
+        "operationId": "getAuditLogs",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAuditLogResponse"
                 }
               }
             }
@@ -1093,6 +1463,12 @@
           },
           "newRecordHash": {
             "type": "string"
+          },
+          "transactionPrice": {
+            "type": "number"
+          },
+          "taxAmount": {
+            "type": "number"
           }
         }
       },
@@ -1295,11 +1671,15 @@
           "buyerId": {
             "type": "integer",
             "format": "int64"
+          },
+          "transactionPrice": {
+            "type": "number"
           }
         },
         "required": [
           "buyerId",
-          "landRecordId"
+          "landRecordId",
+          "transactionPrice"
         ]
       },
       "RegisterRequest": {
@@ -1339,6 +1719,9 @@
           "token": {
             "type": "string"
           },
+          "refreshToken": {
+            "type": "string"
+          },
           "userId": {
             "type": "integer",
             "format": "int64"
@@ -1353,6 +1736,18 @@
             "type": "string"
           }
         }
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
       },
       "LoginRequest": {
         "type": "object",
@@ -1407,6 +1802,52 @@
           "password",
           "role"
         ]
+      },
+      "MerkleTreeResponse": {
+        "type": "object",
+        "properties": {
+          "rootHash": {
+            "type": "string"
+          },
+          "leafCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "treeHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/NodeResponse"
+              }
+            }
+          }
+        }
+      },
+      "NodeResponse": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "leaf": {
+            "type": "boolean"
+          },
+          "duplicate": {
+            "type": "boolean"
+          },
+          "recordId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kittaNumber": {
+            "type": "string"
+          }
+        }
       },
       "ProofStepResponse": {
         "type": "object",
@@ -1471,6 +1912,138 @@
           }
         }
       },
+      "PageUserResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "paged": {
+            "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "unpaged": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "sorted": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageLandRecordResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandRecordResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
       "OwnershipHistoryResponse": {
         "type": "object",
         "properties": {
@@ -1503,6 +2076,130 @@
           "ownedUntil": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "PageTransferResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuditLogResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "details": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        }
+      },
+      "PageAuditLogResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
           }
         }
       }

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.ChainVerificationResponse;
+import np.com.abhishekojha.landrecordmanagementbackend.dto.response.MerkleTreeResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.VerificationResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.ResourceNotFoundException;
 import np.com.abhishekojha.landrecordmanagementbackend.merkle.HashChainVerifier;
@@ -76,6 +77,12 @@ public class VerificationController {
                 "rootHash", rootHash != null ? rootHash : "NO_RECORDS",
                 "message", rootHash != null ? "Current Merkle tree root" : "No active records"
         ));
+    }
+
+    @GetMapping("/tree")
+    @Operation(summary = "Get the full current Merkle tree, level by level, for visualization")
+    public ResponseEntity<MerkleTreeResponse> getTree() {
+        return ResponseEntity.ok(integrityService.getTreeSnapshot());
     }
 
     @GetMapping("/record/{id}/proof")

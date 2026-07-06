@@ -1,5 +1,5 @@
 import api from './axiosConfig';
-import type { VerificationResult, ChainVerificationResult, ProofStep } from '@/types/verification';
+import type { VerificationResult, ChainVerificationResult, ProofStep, MerkleTreeSnapshot } from '@/types/verification';
 
 export const verificationApi = {
   verifyRecord: (id: number) =>
@@ -13,4 +13,7 @@ export const verificationApi = {
 
   getProof: (id: number) =>
     api.get<ProofStep[]>(`/verification/record/${id}/proof`),
+
+  getTree: () =>
+    api.get<MerkleTreeSnapshot>('/verification/tree'),
 };
