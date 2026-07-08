@@ -42,13 +42,18 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/land-records" element={<LandRecordsPage />} />
             <Route path="/land-records/:id" element={<LandRecordDetailPage />} />
             <Route path="/verification" element={<VerificationPage />} />
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['MALPOT_OFFICER']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['MALPOT_OFFICER', 'SUPER_ADMIN']} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/land-records" element={<LandRecordsPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
           <Route element={<MainLayout />}>
             <Route path="/land-records/new" element={<CreateLandRecordPage />} />
           </Route>

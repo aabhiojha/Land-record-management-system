@@ -145,7 +145,7 @@ class SystemWorkflowE2ETest {
 
     @Test
     void transferWorkflow_initiateVerifyApprove_changesOwnerAndStaysVerifiable() throws Exception {
-        // 1. Officer registers a new land record owned by citizen1.
+        // 1. Admin registers a new land record owned by citizen1.
         LandRecordRequest recordReq = new LandRecordRequest();
         recordReq.setKittaNumber("SYS-9001");
         recordReq.setAreaSqMeters(650.0);
@@ -155,8 +155,8 @@ class SystemWorkflowE2ETest {
         recordReq.setLandType("AABAD");
         recordReq.setOwnerId(citizen1.getId());
 
-        MvcResult created = mockMvc.perform(post("/api/officer/land-records")
-                        .header("Authorization", token(officer))
+        MvcResult created = mockMvc.perform(post("/api/admin/land-records")
+                        .header("Authorization", token(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(recordReq)))
                 .andExpect(status().isOk())

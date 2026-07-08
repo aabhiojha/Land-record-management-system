@@ -32,8 +32,8 @@ public class CitizenLookupController {
         return ResponseEntity.ok(userService.searchBuyer(citizenshipNumber, email));
     }
 
-    @GetMapping("/api/officer/citizens")
-    @Operation(summary = "List all citizens (Officer only)")
+    @GetMapping("/api/admin/citizens")
+    @Operation(summary = "List all citizens (Super Admin only)")
     public ResponseEntity<Page<UserResponse>> getCitizensForOfficer(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

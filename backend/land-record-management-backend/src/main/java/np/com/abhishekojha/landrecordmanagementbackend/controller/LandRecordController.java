@@ -26,14 +26,14 @@ public class LandRecordController {
 
     private final LandRecordService landRecordService;
 
-    @PostMapping("/api/officer/land-records")
-    @Operation(summary = "Create a new land record (Officer only)")
+    @PostMapping("/api/admin/land-records")
+    @Operation(summary = "Create a new land record (Super Admin only)")
     public ResponseEntity<LandRecordResponse> create(@Valid @RequestBody LandRecordRequest request) {
         return ResponseEntity.ok(landRecordService.createLandRecord(request));
     }
 
-    @PostMapping("/api/officer/land-records/bulk")
-    @Operation(summary = "Bulk create new land records (Officer only)")
+    @PostMapping("/api/admin/land-records/bulk")
+    @Operation(summary = "Bulk create new land records (Super Admin only)")
     public ResponseEntity<List<LandRecordResponse>> createBulk(@Valid @RequestBody List<LandRecordRequest> requests) {
         return ResponseEntity.ok(landRecordService.createLandRecordsBulk(requests));
     }
@@ -53,14 +53,14 @@ public class LandRecordController {
 
     @GetMapping("/api/land-records/{id}")
     @Operation(summary = "Get land record by ID")
-    public ResponseEntity<LandRecordResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(landRecordService.getRecord(id));
+    public ResponseEntity<LandRecordResponse> getById(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(landRecordService.getRecord(id, user));
     }
 
     @GetMapping("/api/land-records/{id}/history")
     @Operation(summary = "Get ownership history for a land record")
-    public ResponseEntity<List<OwnershipHistoryResponse>> getHistory(@PathVariable Long id) {
-        return ResponseEntity.ok(landRecordService.getOwnershipHistory(id));
+    public ResponseEntity<List<OwnershipHistoryResponse>> getHistory(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(landRecordService.getOwnershipHistory(id, user));
     }
 
     @GetMapping("/api/citizen/my-records")

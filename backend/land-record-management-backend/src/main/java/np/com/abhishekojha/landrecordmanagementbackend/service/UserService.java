@@ -41,6 +41,11 @@ public class UserService {
             throw new BadRequestException("Invalid role: " + request.getRole());
         }
 
+        if (role == UserRole.CITIZEN
+                && (request.getCitizenshipNumber() == null || request.getCitizenshipNumber().isBlank())) {
+            throw new BadRequestException("Citizenship number is required for citizen accounts");
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())

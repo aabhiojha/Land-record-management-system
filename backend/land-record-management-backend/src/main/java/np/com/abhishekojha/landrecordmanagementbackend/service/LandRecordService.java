@@ -5,11 +5,13 @@ import np.com.abhishekojha.landrecordmanagementbackend.dto.request.LandRecordReq
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.LandRecordResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.OwnershipHistoryResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.BadRequestException;
+import np.com.abhishekojha.landrecordmanagementbackend.exception.ForbiddenException;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.ResourceNotFoundException;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.LandRecord;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.OwnershipHistory;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
 import np.com.abhishekojha.landrecordmanagementbackend.model.enums.LandType;
+import np.com.abhishekojha.landrecordmanagementbackend.model.enums.UserRole;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.LandRecordRepository;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.OwnershipHistoryRepository;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.UserRepository;
@@ -101,9 +103,10 @@ public class LandRecordService {
                 .map(this::toResponse);
     }
 
-    public LandRecordResponse getRecord(Long id) {
+    public LandRecordResponse getRecord(Long id, User requester) {
         LandRecord record = landRecordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Land record not found: " + id));
+        assertViewable(record, requester);
         return toResponse(record);
     }
 
@@ -118,15 +121,24 @@ public class LandRecordService {
                 .map(this::toResponse);
     }
 
-    public List<OwnershipHistoryResponse> getOwnershipHistory(Long recordId) {
-        if (!landRecordRepository.existsById(recordId)) {
-            throw new ResourceNotFoundException("Land record not found: " + recordId);
-        }
+    public List<OwnershipHistoryResponse> getOwnershipHistory(Long recordId, User requester) {
+        LandRecord record = landRecordRepository.findById(recordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Land record not found: " + recordId));
+        assertViewable(record, requester);
 
         return ownershipHistoryRepository.findByLandRecordIdOrderByOwnedFromAsc(recordId)
                 .stream()
                 .map(this::toHistoryResponse)
                 .toList();
+    }
+
+    // Citizens may only view records they currently own; staff roles (officer,
+    // admin) can view any record since they administer the whole registry.
+    private void assertViewable(LandRecord record, User requester) {
+        if (requester.getRole() == UserRole.CITIZEN
+                && !record.getCurrentOwner().getId().equals(requester.getId())) {
+            throw new ForbiddenException("You do not have access to this land record");
+        }
     }
 
     private LandRecordResponse toResponse(LandRecord record) {

@@ -47,7 +47,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/officer/**").hasRole("MALPOT_OFFICER")
                         .requestMatchers("/api/citizen/**").hasRole("CITIZEN")
-                        .requestMatchers(HttpMethod.GET, "/api/land-records/**").hasAnyRole("MALPOT_OFFICER", "SUPER_ADMIN")
+                        // Listing ALL records is officer/admin only (would otherwise leak
+                        // every citizen's records); a single record's detail/history is
+                        // open to any authenticated user, with ownership enforced for
+                        // citizens in LandRecordService.
+                        .requestMatchers(HttpMethod.GET, "/api/land-records").hasAnyRole("MALPOT_OFFICER", "SUPER_ADMIN")
                         .requestMatchers("/api/verification/**").authenticated()
                         .requestMatchers("/api/documents/**").authenticated()
                         .anyRequest().authenticated()
@@ -70,7 +74,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://landregistry.dev"));
+        config.setAllowedOrigins(List.of("https://landregistry.dev", "http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

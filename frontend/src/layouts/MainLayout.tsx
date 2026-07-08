@@ -81,14 +81,14 @@ export function MainLayout() {
 }
 
 function getNavLinks(role: string | null) {
-  const links = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/land-records', label: 'Land Records' },
-  ];
+  const links = [{ to: '/dashboard', label: 'Dashboard' }];
 
   if (role === 'CITIZEN') {
     links.push({ to: '/my-records', label: 'My Records' });
     links.push({ to: '/transfers', label: 'Transfers' });
+  } else {
+    // Listing ALL land records is officer/admin only on the backend.
+    links.push({ to: '/land-records', label: 'Land Records' });
   }
 
   if (role === 'MALPOT_OFFICER') {

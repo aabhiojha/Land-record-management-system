@@ -185,6 +185,7 @@ interface QuickAction {
 function getQuickActions(role: string | null): QuickAction[] {
   if (role === 'SUPER_ADMIN') {
     return [
+      { label: 'Register a new record', to: '/land-records/new' },
       { label: 'Review pending transfers', to: '/transfers' },
       { label: 'Manage users', to: '/users' },
       { label: 'Audit trail', to: '/audit' },
@@ -192,7 +193,6 @@ function getQuickActions(role: string | null): QuickAction[] {
   }
   if (role === 'MALPOT_OFFICER') {
     return [
-      { label: 'Register a new record', to: '/land-records/new' },
       { label: 'Verify records', to: '/verification' },
       { label: 'Pending transfers', to: '/transfers' },
     ];

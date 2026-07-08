@@ -103,10 +103,10 @@ class LandRecordIntegrationTest {
         assertNotNull(transfer.getNewRecordHash());
         assertNotEquals(originalHash, transfer.getNewRecordHash());
 
-        LandRecordResponse updated = landRecordService.getRecord(record.getId());
+        LandRecordResponse updated = landRecordService.getRecord(record.getId(), admin);
         assertEquals(citizen2.getId(), updated.getOwnerId());
 
-        var history = landRecordService.getOwnershipHistory(record.getId());
+        var history = landRecordService.getOwnershipHistory(record.getId(), admin);
         assertEquals(2, history.size());
     }
 
@@ -147,7 +147,7 @@ class LandRecordIntegrationTest {
         transfer = transferService.rejectTransfer(transfer.getId(), "Missing documents", admin);
         assertEquals("REJECTED", transfer.getStatus());
 
-        LandRecordResponse unchanged = landRecordService.getRecord(record.getId());
+        LandRecordResponse unchanged = landRecordService.getRecord(record.getId(), admin);
         assertEquals(citizen1.getId(), unchanged.getOwnerId());
     }
 

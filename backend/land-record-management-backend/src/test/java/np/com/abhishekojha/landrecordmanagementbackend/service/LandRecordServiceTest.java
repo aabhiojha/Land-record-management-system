@@ -3,10 +3,12 @@ package np.com.abhishekojha.landrecordmanagementbackend.service;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.request.LandRecordRequest;
 import np.com.abhishekojha.landrecordmanagementbackend.dto.response.LandRecordResponse;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.BadRequestException;
+import np.com.abhishekojha.landrecordmanagementbackend.exception.ForbiddenException;
 import np.com.abhishekojha.landrecordmanagementbackend.exception.ResourceNotFoundException;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.LandRecord;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.OwnershipHistory;
 import np.com.abhishekojha.landrecordmanagementbackend.model.entity.User;
+import np.com.abhishekojha.landrecordmanagementbackend.model.enums.LandType;
 import np.com.abhishekojha.landrecordmanagementbackend.model.enums.UserRole;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.LandRecordRepository;
 import np.com.abhishekojha.landrecordmanagementbackend.repository.OwnershipHistoryRepository;
@@ -156,14 +158,47 @@ class LandRecordServiceTest {
     @Test
     void getRecord_Unknown_ThrowsNotFound() {
         when(landRecordRepository.findById(42L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> landRecordService.getRecord(42L));
+        assertThrows(ResourceNotFoundException.class, () -> landRecordService.getRecord(42L, owner));
     }
 
     @Test
     void getOwnershipHistory_UnknownRecord_ThrowsNotFound() {
-        when(landRecordRepository.existsById(42L)).thenReturn(false);
-        assertThrows(ResourceNotFoundException.class, () -> landRecordService.getOwnershipHistory(42L));
+        when(landRecordRepository.findById(42L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> landRecordService.getOwnershipHistory(42L, owner));
         verify(ownershipHistoryRepository, never()).findByLandRecordIdOrderByOwnedFromAsc(any());
+    }
+
+    @Test
+    void getRecord_ByNonOwningCitizen_ThrowsForbidden() {
+        LandRecord record = LandRecord.builder().id(1L).kittaNumber("KTM-1000")
+                .recordHash("h").isActive(true).currentOwner(owner).build();
+        User otherCitizen = User.builder().id(99L).role(UserRole.CITIZEN).build();
+        when(landRecordRepository.findById(1L)).thenReturn(Optional.of(record));
+
+        assertThrows(ForbiddenException.class, () -> landRecordService.getRecord(1L, otherCitizen));
+    }
+
+    @Test
+    void getRecord_ByOwningCitizen_Succeeds() {
+        LandRecord record = LandRecord.builder().id(1L).kittaNumber("KTM-1000").landType(LandType.AABAD)
+                .recordHash("h").isActive(true).currentOwner(owner).build();
+        when(landRecordRepository.findById(1L)).thenReturn(Optional.of(record));
+
+        LandRecordResponse response = landRecordService.getRecord(1L, owner);
+
+        assertEquals("KTM-1000", response.getKittaNumber());
+    }
+
+    @Test
+    void getRecord_ByOfficer_SucceedsRegardlessOfOwnership() {
+        LandRecord record = LandRecord.builder().id(1L).kittaNumber("KTM-1000").landType(LandType.AABAD)
+                .recordHash("h").isActive(true).currentOwner(owner).build();
+        User officer = User.builder().id(5L).role(UserRole.MALPOT_OFFICER).build();
+        when(landRecordRepository.findById(1L)).thenReturn(Optional.of(record));
+
+        LandRecordResponse response = landRecordService.getRecord(1L, officer);
+
+        assertEquals("KTM-1000", response.getKittaNumber());
     }
 
     @Test
