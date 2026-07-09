@@ -17,8 +17,8 @@ export interface Transfer {
   rejectionReason: string | null;
   oldRecordHash: string | null;
   newRecordHash: string | null;
-  transactionPrice: number;
-  taxAmount: number;
+  transactionPrice: number | null;
+  taxAmount: number | null;
 }
 
 export interface TransferRequest {

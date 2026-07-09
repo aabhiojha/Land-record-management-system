@@ -22,6 +22,7 @@ export function TransfersPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [selectedLandRecord, setSelectedLandRecord] = useState<LandRecord | null>(null);
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -91,11 +92,12 @@ export function TransfersPage() {
     }
   };
 
-  const handleViewLandRecord = async (landRecordId: number) => {
+  const handleViewLandRecord = async (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
     setDialogOpen(true);
     setDetailsLoading(true);
     try {
-      const res = await landRecordApi.getById(landRecordId);
+      const res = await landRecordApi.getById(transfer.landRecordId);
       setSelectedLandRecord(res.data);
     } catch {
       /* empty */
@@ -140,9 +142,9 @@ export function TransfersPage() {
               {transfers.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">
-                    <button 
+                    <button
                       className="text-primary hover:underline font-medium text-left"
-                      onClick={() => handleViewLandRecord(t.landRecordId)}
+                      onClick={() => handleViewLandRecord(t)}
                     >
                       {t.kittaNumber}
                     </button>
@@ -191,7 +193,10 @@ export function TransfersPage() {
         />
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) setSelectedTransfer(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Land Record Details</DialogTitle>
@@ -204,6 +209,26 @@ export function TransfersPage() {
               <div className="py-8"><LoadingSpinner /></div>
             ) : selectedLandRecord ? (
               <div className="space-y-4 text-sm">
+                {selectedTransfer && (selectedTransfer.transactionPrice != null || selectedTransfer.taxAmount != null) && (
+                  <div className="grid grid-cols-2 gap-y-4 gap-x-6 rounded-md border bg-muted/40 p-3">
+                    <div>
+                      <p className="text-muted-foreground mb-1">Agreed Price</p>
+                      <p className="font-medium">
+                        {selectedTransfer.transactionPrice != null
+                          ? `Rs. ${selectedTransfer.transactionPrice.toLocaleString()}`
+                          : '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-1">Tax (5%)</p>
+                      <p className="font-medium">
+                        {selectedTransfer.taxAmount != null
+                          ? `Rs. ${selectedTransfer.taxAmount.toLocaleString()}`
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                   <div>
                     <p className="text-muted-foreground mb-1">District</p>
